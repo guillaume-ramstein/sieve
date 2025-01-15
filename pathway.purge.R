@@ -1,11 +1,11 @@
-setwd('/Volumes/N1')
+setwd('/Volumes/N1/SIEVE')
 
 # Purge by Pathway
 
 ############################## DATASETS ########################################
 # Variant GQ filtering
 GQ.threshold = 20
-tmp.singletons<-readRDS('./INPUT/GENOME/BD/M5/GQ/snps.combined.info.M2_singletons.rds')
+tmp.singletons<-readRDS('./DATA/snps.combined.info.M2_singletons.rds')
 
 singletons.filtered<-tmp.singletons[which(!is.na(tmp.singletons$GQ) & tmp.singletons$GQ < GQ.threshold & tmp.singletons$generation == 'M2'),]
 singletons.filtered.M2<-unique(paste(singletons.filtered$chromosome,singletons.filtered$position,singletons.filtered$REF,singletons.filtered$ALT,sep=':'))
@@ -15,9 +15,9 @@ singletons.filtered.M2.M5<-unique(paste(singletons.filtered$chromosome,singleton
 
 rm(singletons.filtered)
 
-singletons.M2 <- read.table('./OUTPUT/BD/SINGLETONS.M5/singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-singletons.M5 <- read.table('./OUTPUT/BD/SINGLETONS.M5/singletons.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-multix.M5 <- read.table('./OUTPUT/BD/SINGLETONS.M5/multix.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+singletons.M2 <- read.table('./DATA/singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+singletons.M5 <- read.table('./DATA/singletons.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+multix.M5 <- read.table('./DATA/multix.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #Filter away singletons with scores below threshold
 singletons.M2 <- data.frame(singletons.M2, 'variant'=paste(singletons.M2$chr,singletons.M2$pos,singletons.M2$allele1,singletons.M2$allele2, sep=':'), stringsAsFactors = F)
@@ -41,13 +41,13 @@ cohort.M5<-sort(unique(c(singletons.M5[!is.na(singletons.M5$host.hom),]$host.hom
 
 #Cohort
 # Make list of selected M2 plants
-filtered <- read.table('./INPUT/GENOME/BD/M5/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
+filtered <- read.table('./DATA/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
 filtered <- filtered$V1
-fam <- read.table('./INPUT/GENOME/BD/M5/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
+fam <- read.table('./DATA/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
 fam<-fam[which(!startsWith(fam$V1,'M5')),]
 controls <- fam[which(startsWith(fam$V1,'C')),]$V1
 cases <- fam[which(!startsWith(fam$V1,'C')),]$V1
-selection <- read.table('./INPUT/GENOME/BD/M5/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+selection <- read.table('./DATA/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 filtered <- unique(c(filtered,sort(unique(selection[which(selection$selected == 0),]$line))))
 controls <- setdiff(controls,filtered)
 cases <- setdiff(cases,filtered)
@@ -77,7 +77,7 @@ singleton.chrom<-unique(rbind(data.frame('variant'=paste(singletons.M2$chr,singl
 
 # Variant chromosomal arm assignment
 centromeres<-unique(rbind(data.frame('variant'=paste(singletons.M2$chr,singletons.M2$pos,singletons.M2$allele1,singletons.M2$allele2,sep=':'),'chromosome'=singletons.M2$chr,'pos'=singletons.M2$pos),data.frame('variant'=paste(singletons.M5$chr,singletons.M5$pos,singletons.M5$allele1,singletons.M5$allele2,sep=':'),'chromosome'=singletons.M5$chr,'pos'=singletons.M5$pos)))
-centromeres<-merge(centromeres,read.table('./INPUT/GENOME/BD/annotated/centromeres.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F), by='chromosome')
+centromeres<-merge(centromeres,read.table('./DATA/centromeres.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F), by='chromosome')
 centromeres<-data.frame(centromeres[2], 'chromosome.arm'=as.integer(centromeres$pos > centromeres$cen.pos)+1,stringsAsFactors = F)
 singleton.chrom<-merge(singleton.chrom,centromeres,by='variant')
 rm(centromeres)
@@ -168,18 +168,18 @@ rm(tmp,df,arm1.singletons,arm2.singletons)
 ############################## DATASETS ########################################
 
 # Get gene ids for each variant  
-annotations <- read.table('./INPUT/GENOME/BD/M5/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+annotations <- read.table('./DATA/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 variants.gene <- data.frame('variant'=paste(annotations$chr,annotations$position,annotations$ref,annotations$alt,sep=':'), 'gene'=annotations$gene, stringsAsFactors=F)
 
 # Remove variants that are not within genes
 variants.gene<-variants.gene[which(variants.gene$gene!=""),]
 
-gene.id.translation <- read.table('./INPUT/GENOME/BD/gene.id.translation.tsv', header=F, sep='\t',fill=T,stringsAsFactors = F)
+gene.id.translation <- read.table('./DATA/gene.id.translation.tsv', header=F, sep='\t',fill=T,stringsAsFactors = F)
 names(gene.id.translation)<-c('BD21.3','BD21')
 gene.id.translation$BD21.3<-sapply(strsplit(gene.id.translation$BD21.3,split='.',fixed=T),'[',2)
 gene.id.translation$BD21<-toupper(gene.id.translation$BD21)
 
-pathways <- read.table('./INPUT/METADATA/BD/brachypodiumcyc_pathways.20230103', header=T, sep='\t',quote='',fill=T,stringsAsFactors = F)
+pathways <- read.table('./DATA/brachypodiumcyc_pathways.20230103', header=T, sep='\t',quote='',fill=T,stringsAsFactors = F)
 pathways <- unique(pathways[which(pathways$Gene.id != 'unknown'),c(1,2,7)])
 
 pathways<-merge(pathways,gene.id.translation, by.x='Gene.id', by.y='BD21')[c(2,3,4)]
@@ -193,7 +193,7 @@ for (generation in c('M2','M3','M4'))
   df <- data.frame()
   for (table in c('1a','1b','2a','2b','3a','3b','4a','4b'))
   {
-    tmp <- read.table(paste('./INPUT/PHENOTYPE/',generation,'.table.',table,'.tsv',sep=''), header=F, sep='\t',fill=T,stringsAsFactors = F)
+    tmp <- read.table(paste('./DATA/',generation,'.table.',table,'.tsv',sep=''), header=F, sep='\t',fill=T,stringsAsFactors = F)
     for (y in 1:nrow(tmp))
       for (x in 1:ncol(tmp))
         df<-rbind(df,data.frame('ID'=tmp[y,x],'table'=table,'x'=x,'y'=y,stringsAsFactors = F))
@@ -236,13 +236,13 @@ for (pathway in unique(pathway.purge$pathway.id))
 
 res.pathway.purge<-unique(merge(pathways[c(1,2)],res.pathway.purge, by.x='pathway.id', by.y='pathway'))
 res.pathway.purge<-res.pathway.purge[order(res.pathway.purge$p),]
-write.table(res.pathway.purge,file='./OUTPUT/BD/pathways.purge.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./OUTPUT/BD/pathways.purge.results.rds')
+write.table(res.pathway.purge,file='./RESULTS/pathways.purge.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./RESULTS/pathways.purge.results.rds')
 View(res.pathway.purge[which(res.pathway.purge$p < 0.05),])
 
 res.pathway.purge.adjusted<-res.pathway.purge
 res.pathway.purge.adjusted$p.fdr = p.adjust(res.pathway.purge.adjusted$p, method = 'fdr')
-write.table(res.pathway.purge.adjusted,file='./OUTPUT/BD/pathways.purge.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
+write.table(res.pathway.purge.adjusted,file='./RESULTS/pathways.purge.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathway.purge.adjusted[which(res.pathway.purge.adjusted$p.fdr < 0.05),])
 
 #-----------------------------------------END-----------------------------------

@@ -1,8 +1,8 @@
-setwd('/Volumes/N1')
+setwd('/Volumes/N1/SIEVE')
 
 # Variant GQ filtering
 GQ.threshold = 20
-tmp.singletons<-readRDS('./INPUT/GENOME/BD/M5/GQ/snps.combined.info.M2_singletons.rds')
+tmp.singletons<-readRDS('./DATA/snps.combined.info.M2_singletons.rds')
 
 singletons.filtered<-tmp.singletons[which(!is.na(tmp.singletons$GQ) & tmp.singletons$GQ < GQ.threshold & tmp.singletons$generation == 'M2'),]
 singletons.filtered.M2<-unique(paste(singletons.filtered$chromosome,singletons.filtered$position,singletons.filtered$REF,singletons.filtered$ALT,sep=':'))
@@ -13,9 +13,9 @@ singletons.filtered.M2.M5<-unique(paste(singletons.filtered$chromosome,singleton
 rm(singletons.filtered)
 
 # Singletons
-singletons.M2 <- read.table('./OUTPUT/BD/SINGLETONS.M5/singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-singletons.M5 <- read.table('./OUTPUT/BD/SINGLETONS.M5/singletons.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-multix.M5 <- read.table('./OUTPUT/BD/SINGLETONS.M5/multix.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+singletons.M2 <- read.table('./DATA//singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+singletons.M5 <- read.table('./DATA/singletons.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+multix.M5 <- read.table('./DATA/multix.M5.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #Filter away singletons with scores below threshold
 singletons.M2 <- data.frame(singletons.M2, 'variant'=paste(singletons.M2$chr,singletons.M2$pos,singletons.M2$allele1,singletons.M2$allele2, sep=':'), stringsAsFactors = F)
@@ -39,16 +39,16 @@ singletons.M5<-singletons.M5[which((singletons.M5$allele1 == 'G' & singletons.M5
 cohort.M2<-sort(unique(c(singletons.M2[!is.na(singletons.M2$host.hom),]$host.hom,singletons.M2[!is.na(singletons.M2$host.het),]$host.het)))
 cohort.M5<-sort(unique(c(singletons.M5[!is.na(singletons.M5$host.hom),]$host.hom,singletons.M5[!is.na(singletons.M5$host.het),]$host.het)))
 
-selection <- read.table('./INPUT/GENOME/BD/M5/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+selection <- read.table('./DATA/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #Cohort
-filtered <- read.table('./INPUT/GENOME/BD/M5/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
+filtered <- read.table('./DATA/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
 filtered <- filtered$V1
-fam <- read.table('./INPUT/GENOME/BD/M5/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
+fam <- read.table('./DATA/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
 fam<-fam[which(!startsWith(fam$V1,'M5')),]
 controls <- fam[which(startsWith(fam$V1,'C')),]$V1
 cases <- fam[which(!startsWith(fam$V1,'C')),]$V1
-selection <- read.table('./INPUT/GENOME/BD/M5/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+selection <- read.table('./DATA/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 filtered <- unique(c(filtered,sort(unique(selection[which(selection$selected == 0),]$line))))
 controls <- setdiff(controls,filtered)
 cases <- setdiff(cases,filtered)
@@ -90,7 +90,7 @@ singleton.chrom<-unique(rbind(data.frame('variant'=paste(singletons.M2$chr,singl
 
 # Variant chromosomal arm assignment
 centromeres<-unique(rbind(data.frame('variant'=paste(singletons.M2$chr,singletons.M2$pos,singletons.M2$allele1,singletons.M2$allele2,sep=':'),'chromosome'=singletons.M2$chr,'pos'=singletons.M2$pos),data.frame('variant'=paste(singletons.M5$chr,singletons.M5$pos,singletons.M5$allele1,singletons.M5$allele2,sep=':'),'chromosome'=singletons.M5$chr,'pos'=singletons.M5$pos)))
-centromeres<-merge(centromeres,read.table('./INPUT/GENOME/BD/annotated/centromeres.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F), by='chromosome')
+centromeres<-merge(centromeres,read.table('./DATA/centromeres.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F), by='chromosome')
 centromeres<-data.frame(centromeres[2], 'chromosome.arm'=as.integer(centromeres$pos > centromeres$cen.pos)+1,stringsAsFactors = F)
 singleton.chrom<-merge(singleton.chrom,centromeres,by='variant')
 rm(centromeres)
@@ -139,7 +139,7 @@ purge<-purge[which(purge$genotype.M2 == '0/1'),]
 purge<-purge[which(purge$genotype.M5 != '0/1'),]
 
 # Variant annotations
-annotations <- read.table('./INPUT/GENOME/BD/M5/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+annotations <- read.table('./DATA/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 annotations <- data.frame('variant'=paste(annotations$chr,annotations$position,annotations$ref,annotations$alt,sep=':'), 'genic'=annotations$genic, 'intergenic'=annotations$intergenic,'cds'=annotations$cds,'utr'=annotations$utr, 'intronic'=F, stringsAsFactors=F)
 annotations[which(annotations$genic & !(annotations$cds| annotations$utr)),]$intronic = T
 
@@ -183,7 +183,7 @@ for (chromosome in unique(tmp$chromosome))
 rm(tmp,df,arm1.singletons,arm2.singletons)
 
 #-------------------------- PDS gene distance ----------------------------------
-pds.distance <- read.table('./OUTPUT/BD/variants.tss.distance.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+pds.distance <- read.table('./DATA/variants.tss.distance.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 pds.distance<-data.frame('variant'=paste(pds.distance$chromosome,pds.distance$position,pds.distance$allele1,pds.distance$allele2,sep=':'),'tss.distance'=pds.distance$distance,stringsAsFactors = F)
 pds.distance$proximal = (pds.distance$tss.distance <= 2000)
 
@@ -191,10 +191,10 @@ pds.distance$proximal = (pds.distance$tss.distance <= 2000)
 
 #---------------------------- ESM ----------------------------------------------
 
-esm.scores <- read.table('./ESM/scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+esm.scores <- read.table('./DATA/esm.scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 esm.scores<-data.frame('variant'=paste(esm.scores$chr,esm.scores$pos,esm.scores$allele1,esm.scores$allele2,sep=':'),esm.scores[c(5,6,7)])
 esm.scores$score <-round(esm.scores$score,1)
-bd.primary.transcript<-read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+bd.primary.transcript<-read.table('./DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 esm.scores<-esm.scores[which(esm.scores$transcript %in% bd.primary.transcript$transcript), ]
 tally<-data.frame(table('variant'=esm.scores$variant), stringsAsFactors = F)
 if (nrow(tally)>0)
@@ -202,14 +202,14 @@ if (nrow(tally)>0)
 
 #----------------------------- PDS ---------------------------------------------
 
-pds.scores <- read.table('./PlantDeepSea/scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+pds.scores <- read.table('./DATA/pds.scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 pds.scores$score = round(pds.scores$score,2)
-pds.logits <- read.table('./PlantDeepSea/pds.logits.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+pds.logits <- read.table('./DATA/pds.logits.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #------------------------------------- SIFT ------------------------------------
 
-sift.scores <- read.table('./SIFT/scores.no.synonymous.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-bd.primary.transcript<-read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+sift.scores <- read.table('./DATA/sift.scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+bd.primary.transcript<-read.table('./DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 sift.scores<-sift.scores[which(sift.scores$transcript %in% paste(bd.primary.transcript$transcript, 'v1.2', sep='.')), ]
 tally<-data.frame(table('variant'=sift.scores$variant), stringsAsFactors = F)
 if (nrow(tally)>0)
@@ -217,7 +217,7 @@ if (nrow(tally)>0)
 
 #---------------------------------- PHYTOEXPR ----------------------------------
 
-phytoxpr.scores <- read.table('./PhytoExpr/scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+phytoxpr.scores <- read.table('./DATA/phytoexpr.scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #----------------------------- TABLE -------------------------------------------
 tables<-list()
@@ -226,7 +226,7 @@ for (generation in c('M2','M3','M4'))
   df <- data.frame()
   for (table in c('1a','1b','2a','2b','3a','3b','4a','4b'))
   {
-    tmp <- read.table(paste('./INPUT/PHENOTYPE/',generation,'.table.',table,'.tsv',sep=''), header=F, sep='\t',fill=T,stringsAsFactors = F)
+    tmp <- read.table(paste('./DATA/',generation,'.table.',table,'.tsv',sep=''), header=F, sep='\t',fill=T,stringsAsFactors = F)
     for (y in 1:nrow(tmp))
       for (x in 1:ncol(tmp))
         df<-rbind(df,data.frame('ID'=tmp[y,x],'table'=table,'x'=x,'y'=y,stringsAsFactors = F))
@@ -359,7 +359,7 @@ res.purge<-rbind(res.purge, data.frame('score'='phytoEXPR',
 
 #-------------------------------- SAVE -----------------------------------------
 
-write.table(res.purge,file='./OUTPUT/BD/purge.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./OUTPUT/BD/purge.results.rds')
+write.table(res.purge,file='./RESULTS/purge.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./RESULTS/purge.results.rds')
 
 #------------------------------- END ----------------------------------------

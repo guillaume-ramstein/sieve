@@ -1,10 +1,10 @@
-setwd('/Volumes/N1')
+setwd('/Volumes/N1/SIEVE')
 
 ############################## DATASETS #######################################
 
 # Variant GQ filtering
 GQ.threshold = 20
-tmp.singletons<-readRDS('./INPUT/GENOME/BD/M5/GQ/snps.combined.info.M2_singletons.rds')
+tmp.singletons<-readRDS('./DATA/snps.combined.info.M2_singletons.rds')
 
 singletons.filtered<-tmp.singletons[which(!is.na(tmp.singletons$GQ) & tmp.singletons$GQ < GQ.threshold & tmp.singletons$generation == 'M2'),]
 singletons.filtered.M2<-unique(paste(singletons.filtered$chromosome,singletons.filtered$position,singletons.filtered$REF,singletons.filtered$ALT,sep=':'))
@@ -12,7 +12,7 @@ singletons.filtered.M2<-unique(paste(singletons.filtered$chromosome,singletons.f
 rm(singletons.filtered)
 
 # Get list of M2 singletons GC - > AT
-singletons.M2 <- read.table('./OUTPUT/BD/SINGLETONS.M5/singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+singletons.M2 <- read.table('./DATA/singletons.M2.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #Filter away singletons with scores below threshold
 singletons.M2 <- data.frame(singletons.M2, 'variant'=paste(singletons.M2$chr,singletons.M2$pos,singletons.M2$allele1,singletons.M2$allele2, sep=':'), stringsAsFactors = F)
@@ -27,13 +27,13 @@ selected = TRUE
 if (selected)
 {
   # Make list of selected M2 plants
-  filtered <- read.table('./INPUT/GENOME/BD/M5/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
+  filtered <- read.table('./DATA/Related_M2_lines.csv', header=F, sep=',',fill=T,stringsAsFactors = F)
   filtered <- filtered$V1
-  fam <- read.table('./INPUT/GENOME/BD/M5/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
+  fam <- read.table('./DATA/snps.combined.fam', header=F, sep=' ',fill=T,stringsAsFactors = F)
   fam<-fam[which(!startsWith(fam$V1,'M5')),]
   controls <- fam[which(startsWith(fam$V1,'C')),]$V1
   cases <- fam[which(!startsWith(fam$V1,'C')),]$V1
-  selection <- read.table('./INPUT/GENOME/BD/M5/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  selection <- read.table('./DATA/selection.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
   filtered <- unique(c(filtered,sort(unique(selection[which(selection$selected == 0),]$line))))
   controls <- setdiff(controls,filtered)
   cases <- setdiff(cases,filtered)
@@ -54,7 +54,7 @@ singletons.het<-paste(singletons.het$chr,singletons.het$pos,singletons.het$allel
 length(unique(c(singletons.het,singletons.hom)))
 
 # Get gene ids for each variant  
-annotations <- read.table('./INPUT/GENOME/BD/M5/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+annotations <- read.table('./DATA/snps.combined.annotation.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 variants.gene <- data.frame('variant'=paste(annotations$chr,annotations$position,annotations$ref,annotations$alt,sep=':'), 'gene'=annotations$gene, stringsAsFactors=F)
 
 nrow(variants.gene)
@@ -62,9 +62,9 @@ nrow(variants.gene)
 variants.gene<-variants.gene[which(variants.gene$gene!=""),]
 
 # Get SIFT annotations and keep only BD21.3 transcripts
-sift<-read.table('./SIFT/BD/annotated/BD_SIFTannotations.xls', header=T, sep='\t',fill=T,stringsAsFactors = F)
+sift<-read.table('./DATA/BD_SIFTannotations.xls', header=T, sep='\t',fill=T,stringsAsFactors = F)
 nrow(sift)
-bd.primary.transcript<-read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+bd.primary.transcript<-read.table('./DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 sift<-sift[which(sift$TRANSCRIPT_ID %in% paste(bd.primary.transcript$transcript, 'v1.2', sep='.')), ]
 sift<-data.frame(sift,'variant'=paste(sift$CHROM,sift$POS,sift$REF_ALLELE,sift$ALT_ALLELE,sep=':'),stringsAsFactors = F)
 nrow(sift)
@@ -92,16 +92,16 @@ gene.singletons[which(is.na(gene.singletons$missense.singletons.hom)),]$missense
 gene.singletons$gene=as.character(gene.singletons$gene)
 
 # Tally of all possible GC->AT missense mutations within the CDS region of each gene
-gene.GC.missense <- rbind(read.table('./SIFT/BD/GRCh38.83/Bd1.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./SIFT/BD/GRCh38.83/Bd2.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./SIFT/BD/GRCh38.83/Bd3.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./SIFT/BD/GRCh38.83/Bd4.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./SIFT/BD/GRCh38.83/Bd5.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F))
+gene.GC.missense <- rbind(read.table('./DATA/Bd1.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./DATA/Bd2.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./DATA/Bd3.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./DATA/Bd4.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F),read.table('./DATA/Bd5.filtered.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F))
 gene.GC.missense.tally <- data.frame(table('gene'=gene.GC.missense$gene))
 names(gene.GC.missense.tally) <- c('gene','gc.missense')
 
-gene.id.translation <- read.table('./INPUT/GENOME/BD/gene.id.translation.tsv', header=F, sep='\t',fill=T,stringsAsFactors = F)
+gene.id.translation <- read.table('./DATA/gene.id.translation.tsv', header=F, sep='\t',fill=T,stringsAsFactors = F)
 names(gene.id.translation)<-c('BD21.3','BD21')
 gene.id.translation$BD21.3<-sapply(strsplit(gene.id.translation$BD21.3,split='.',fixed=T),'[',2)
 gene.id.translation$BD21<-toupper(gene.id.translation$BD21)
 
-pathways <- read.table('./INPUT/METADATA/BD/brachypodiumcyc_pathways.20230103', header=T, sep='\t',quote='',fill=T,stringsAsFactors = F)
+pathways <- read.table('./DATA/brachypodiumcyc_pathways.20230103', header=T, sep='\t',quote='',fill=T,stringsAsFactors = F)
 pathways <- unique(pathways[which(pathways$Gene.id != 'unknown'),c(1,2,7)])
 
 pathways<-merge(pathways,gene.id.translation, by.x='Gene.id', by.y='BD21')[c(2,3,4)]
@@ -151,14 +151,14 @@ for (pathway in unique(gene.missense$pathway.id))
 
 res.pathways<-merge(unique(pathways[c(1,2)]), res.pathways, by.x = 'pathway.id', by.y='pathway', all=T)
 res.pathways<-res.pathways[order(res.pathways$p),]
-write.table(res.pathways,file='./OUTPUT/BD/pathways.anova.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./OUTPUT/BD/pathways.anova.results.rds')
+write.table(res.pathways,file='./DATA/pathways.anova.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./DATA/pathways.anova.results.rds')
 
 min.pathway.genes <- 11
 res.pathways.adjusted<-res.pathways[which(res.pathways$genes >= min.pathway.genes),c(1,2,3,4,5,6)]
 res.pathways.adjusted$p.fdr = p.adjust(res.pathways.adjusted$p, method = 'fdr')
 
-write.table(res.pathways.adjusted,file='./OUTPUT/BD/pathways.anova.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
+write.table(res.pathways.adjusted,file='./DATA/pathways.anova.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathways.adjusted[which(res.pathways.adjusted$p.fdr < 0.05),])
 
 #---- Model 1: Pathway = mut_density, Model 2: mut_density = pathway
@@ -228,13 +228,13 @@ for (pathway in unique(gene.missense$pathway.id))
 
 res.pathways<-merge(unique(pathways[c(1,2)]), res.pathways, by.x = 'pathway.id', by.y='pathway', all=T)
 res.pathways<-res.pathways[order(res.pathways$p),]
-write.table(res.pathways,file='./OUTPUT/BD/pathways.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./OUTPUT/BD/pathways.results.rds')
+write.table(res.pathways,file='./RESULTS/pathways.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./RESULTS/pathways.results.rds')
 
 min.pathway.genes <- 18
 res.pathways.adjusted<-res.pathways[which(res.pathways$genes >= min.pathway.genes),c(1,2,3,4,5)]
 res.pathways.adjusted$p.fdr = p.adjust(res.pathways.adjusted$p, method = 'fdr')
-write.table(res.pathways.adjusted,file='./OUTPUT/BD/pathways.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
+write.table(res.pathways.adjusted,file='./RESULTS/pathways.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathways.adjusted[which(res.pathways.adjusted$p.fdr < 0.05),])
 
 #-----------------------------------------END-----------------------------------
