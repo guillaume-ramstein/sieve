@@ -1,0 +1,4 @@
+1a_call_variants.sh: aligning reads from fastq files by BWA-MEM and calling SNP variants from bam files by GATK-HaplotypeCaller
+1b_make_DB.sh: making genomics database from gVCF files by GATK-GenomicsDBImport
+1c_call_genotypes.sh: calling genotypes from genomics database by GATK-GenotypeGVCFs and filtering variants by GATK-VariantFiltration
+1d_combine_VCFs.sh: combining VCF files across chromosomes and discarding filtered out variants by bcftools
