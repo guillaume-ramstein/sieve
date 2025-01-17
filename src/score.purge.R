@@ -203,8 +203,6 @@ if (nrow(tally)>0)
 #----------------------------- PDS ---------------------------------------------
 
 pds.scores <- read.table('./DATA/pds.scores.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-pds.scores$score = round(pds.scores$score,2)
-pds.logits <- read.table('./DATA/pds.logits.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
 
 #------------------------------------- SIFT ------------------------------------
 
@@ -296,7 +294,7 @@ res.purge<-rbind(res.purge, data.frame('score'='sift',
 
 #------------------------------- PDS -------------------------------------------
 
-df<-merge(purge, pds.logits, by='variant')
+df<-merge(purge, pds.scores, by='variant')
 df<-merge(df,arm.singletons,by='variant')
 df<-merge(df,singleton.chrom,by='variant')
 df<-merge(df,variant.tables,by='variant')

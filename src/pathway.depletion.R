@@ -151,14 +151,14 @@ for (pathway in unique(gene.missense$pathway.id))
 
 res.pathways<-merge(unique(pathways[c(1,2)]), res.pathways, by.x = 'pathway.id', by.y='pathway', all=T)
 res.pathways<-res.pathways[order(res.pathways$p),]
-write.table(res.pathways,file='./DATA/pathways.anova.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./DATA/pathways.anova.results.rds')
+write.table(res.pathways,file='./RESULTS/pathways.anova.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./RESULTS/pathways.anova.results.rds')
 
 min.pathway.genes <- 11
 res.pathways.adjusted<-res.pathways[which(res.pathways$genes >= min.pathway.genes),c(1,2,3,4,5,6)]
 res.pathways.adjusted$p.fdr = p.adjust(res.pathways.adjusted$p, method = 'fdr')
 
-write.table(res.pathways.adjusted,file='./DATA/pathways.anova.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
+write.table(res.pathways.adjusted,file='./RESULTS/pathways.anova.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathways.adjusted[which(res.pathways.adjusted$p.fdr < 0.05),])
 
 #---- Model 1: Pathway = mut_density, Model 2: mut_density = pathway
