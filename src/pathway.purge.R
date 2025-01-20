@@ -227,11 +227,13 @@ for (pathway in unique(pathway.purge$pathway.id))
   df<-pathway.purge
   df$in.pathway = as.integer(df$pathway.id == pathway)
   genes <- length(unique(df[which(df$pathway.id == pathway),]$gene))
-  res <- glm(formula = in.pathway ~ purged + chromosome+chrom.arm.singletons*table, family = binomial(link = "logit"), data = df)
+  #res <- glm(formula = in.pathway ~ purged + chromosome+chrom.arm.singletons*table, family = binomial(link = "logit"), data = df)
+  res <- glm(formula = purged ~ in.pathway + chromosome+chrom.arm.singletons + table, family = binomial(link = "logit"), data = df)
   results[paste(pathway,'result', sep = '.')] = list(res)
+  intercept<-coef(summary(res))[1,1]
   coef<-coef(summary(res))[2,1]
   p<-coef(summary(res))[2,4]
-  res.pathway.purge<-rbind(res.pathway.purge, data.frame('pathway'=pathway,'genes'=genes,'coef'=coef,'p'=p,stringsAsFactors = F))
+  res.pathway.purge<-rbind(res.pathway.purge, data.frame('pathway'=pathway,'genes'=genes,'intercept'=intercept,'coef'=coef,'p'=p,stringsAsFactors = F))
 }
 
 res.pathway.purge<-unique(merge(pathways[c(1,2)],res.pathway.purge, by.x='pathway.id', by.y='pathway'))
@@ -240,7 +242,8 @@ write.table(res.pathway.purge,file='./RESULTS/pathways.purge.results.tsv', sep='
 saveRDS(results,file='./RESULTS/pathways.purge.results.rds')
 View(res.pathway.purge[which(res.pathway.purge$p < 0.05),])
 
-res.pathway.purge.adjusted<-res.pathway.purge
+min.pathway.genes <- 11
+res.pathway.purge.adjusted<-res.pathway.purge[which(res.pathway.purge$genes >= min.pathway.genes),]
 res.pathway.purge.adjusted$p.fdr = p.adjust(res.pathway.purge.adjusted$p, method = 'fdr')
 write.table(res.pathway.purge.adjusted,file='./RESULTS/pathways.purge.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathway.purge.adjusted[which(res.pathway.purge.adjusted$p.fdr < 0.05),])

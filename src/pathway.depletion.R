@@ -115,8 +115,6 @@ gene.missense[which(is.na(gene.missense$missense.singletons.hom)),]$missense.sin
 
 ############################## ANALYSIS ########################################
 
-#----- ANOVA
-
 results <- list()
 res.pathways <- data.frame(stringsAsFactors = F)
 
@@ -151,89 +149,13 @@ for (pathway in unique(gene.missense$pathway.id))
 
 res.pathways<-merge(unique(pathways[c(1,2)]), res.pathways, by.x = 'pathway.id', by.y='pathway', all=T)
 res.pathways<-res.pathways[order(res.pathways$p),]
-write.table(res.pathways,file='./RESULTS/pathways.anova.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./RESULTS/pathways.anova.results.rds')
+write.table(res.pathways,file='./RESULTS/pathways.results.tsv', sep='\t', quote = F, row.names = F)
+saveRDS(results,file='./RESULTS/pathways.results.rds')
 
 min.pathway.genes <- 11
 res.pathways.adjusted<-res.pathways[which(res.pathways$genes >= min.pathway.genes),c(1,2,3,4,5,6)]
 res.pathways.adjusted$p.fdr = p.adjust(res.pathways.adjusted$p, method = 'fdr')
 
-write.table(res.pathways.adjusted,file='./RESULTS/pathways.anova.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
-View(res.pathways.adjusted[which(res.pathways.adjusted$p.fdr < 0.05),])
-
-#---- Model 1: Pathway = mut_density, Model 2: mut_density = pathway
-
-results <- list()
-res.pathways <- data.frame(stringsAsFactors = F)
-
-for (pathway in unique(gene.missense$pathway.id))
-{
-  df <- gene.missense
-  df$in.pathway = as.integer(df$pathway == pathway)
-  genes <- length(unique(df[which(df$pathway == pathway),]$gene))
-  df<-data.frame('in.pathway'=df$in.pathway, 'mut.rate'=(df$missense.singletons.hom+df$missense.singletons.het) /df$gc.missense,'mut.rate.het'=df$missense.singletons.het/df$gc.missense,'mut.rate.hom'=df$missense.singletons.hom/df$gc.missense, stringsAsFactors = F)
-  
-  res3<-lm(formula = mut.rate ~ in.pathway, data = df)
-  df$in.pathway = as.factor(df$in.pathway)
-  
-  res1<-glm(formula = in.pathway ~ mut.rate, family = binomial(link = "logit"), data = df)
-  res2<-glm(formula = in.pathway ~ mut.rate.hom+mut.rate.het , family = binomial(link = "logit"), data = df)
-  
-  if (is.list(res1))
-  {
-    results[paste(pathway,'result1', sep = '.')] = list(res1)
-    coef<-coef(summary(res1))[2,1]
-    p<-coef(summary(res1))[2,4]
-  } else {
-    coef<-NA
-    p<-NA
-  }
-  
-  if (is.list(res2))
-  {
-    results[paste(pathway,'result2', sep = '.')] = list(res2)
-    coef.hom=coef(summary(res2))[2,1]
-    coef.het=coef(summary(res2))[3,1]
-    p.hom=coef(summary(res2))[2,4]
-    p.het=coef(summary(res2))[3,4]
-  } else {
-    coef.hom=NA
-    coef.het=NA
-    p.hom=NA
-    p.het=NA
-  }
-  
-  if (is.list(res3))
-  {
-    results[paste(pathway,'result3', sep = '.')] = list(res3)
-    coef.model2<-coef(summary(res3))[2,1]
-    p.model2<-coef(summary(res3))[2,4]
-  } else {
-    coef.model2<-NA
-    p.model2<-NA
-  }
-  
-  res.pathways<-rbind(res.pathways, data.frame('pathway'=pathway,
-                                               'genes'=genes,
-                                               'coef'=coef,
-                                               'p'=p,
-                                               'coef.hom'=coef.hom,
-                                               'coef.het'=coef.het,
-                                               'p.hom'=p.hom,
-                                               'p.het'=p.het,
-                                               'coef.model2'=coef.model2,
-                                               'p.model2'=p.model2,
-                                               stringsAsFactors = F))
-}
-
-res.pathways<-merge(unique(pathways[c(1,2)]), res.pathways, by.x = 'pathway.id', by.y='pathway', all=T)
-res.pathways<-res.pathways[order(res.pathways$p),]
-write.table(res.pathways,file='./RESULTS/pathways.results.tsv', sep='\t', quote = F, row.names = F)
-saveRDS(results,file='./RESULTS/pathways.results.rds')
-
-min.pathway.genes <- 18
-res.pathways.adjusted<-res.pathways[which(res.pathways$genes >= min.pathway.genes),c(1,2,3,4,5)]
-res.pathways.adjusted$p.fdr = p.adjust(res.pathways.adjusted$p, method = 'fdr')
 write.table(res.pathways.adjusted,file='./RESULTS/pathways.results.adjusted.tsv', sep='\t', quote = F, row.names = F)
 View(res.pathways.adjusted[which(res.pathways.adjusted$p.fdr < 0.05),])
 
