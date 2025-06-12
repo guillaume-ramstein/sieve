@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+import pandas as pd
 
 def GetTranslation(file):
     translation = dict()
@@ -91,6 +92,9 @@ def MakePEERDataset(file_in, dir_out, translation):
     file_samples.close()
     file_expression.close()
 
+    #Transpose matrix
+    pd.read_csv(dir_out+'peer.expression.csv').transpose().to_csv(dir_out+'peer.expression.csv', header=False)
+
 def MakeRDataset(file_in, file_out, observations):
     file_in = open(file_in,'r')
     file_out = open(file_out,'w')
@@ -117,15 +121,18 @@ def MakeRDataset(file_in, file_out, observations):
 def main():
     tpm_file = '/Volumes/N1/RNAseq/RNAseq.reads.tsv'
     translation_file = '/Volumes/N1/RNAseq/RNAseq.ids.tsv'
-    pred_file = '/Volumes/N1/WP2/Data/predictions.tsv'
-    data_file = '/Volumes/N1/WP2/Data/wp2.dataset.tsv'
+    #pred_file = '/Volumes/N1/WP2/Data/predictions.tsv'
+    #data_file = '/Volumes/N1/WP2/Data/wp2.dataset.tsv'
     peer_dir = '/Volumes/N1/WP2/Data/'
-
     translation = GetTranslation(translation_file)
     
+    print('MAking PEER dataset')
     MakePEERDataset(tpm_file, peer_dir, translation)
     observations = GetObservations(tpm_file, translation)
-    MakeRDataset(pred_file, data_file, observations)
+
+    for type in ['none', 'pred', 'emb']:
+        print('MAking WP2 dataset for %s'%type)
+        MakeRDataset('/Volumes/N1/WP2/Data/predictions_%s.tsv'%type, '/Volumes/N1/WP2/Data/wp2.dataset_%s.tsv'%type, observations)
 
 if __name__ == "__main__":
     main()
