@@ -184,7 +184,7 @@ def main():
     # none, pred or emb
     EXTRA = "pred"
 
-    caduceus_file = '/Users/au468646/Downloads/Embeddings/data.csv'
+    caduceus_file = '/Volumes/N1/Embeddings/data.csv'
     translation_file = '/Volumes/N1/INPUT/GENOME/BD/gene.id.translation.tsv'
 
     translations = GetTranslations(translation_file)
@@ -193,8 +193,8 @@ def main():
     datadir = '/Volumes/N1/WP2/Data/'
     groups = np.load(datadir+'group_for_cross_validation.npy', mmap_mode="r", allow_pickle=True)
 
-    caduceus_file = '/Volumes/BURAN/Embeddings/embeddings.bd.caduceus.h5'
-    a2z_file = '/Volumes/BURAN/Embeddings/embeddings.bd.a2z.h5'
+    caduceus_embeddings_file = '/Volumes/BURAN/Embeddings/embeddings.bd.caduceus.h5'
+    a2z_embeddings_file = '/Volumes/BURAN/Embeddings/embeddings.bd.a2z.h5'
 
     TOP_X = 5
     device = 'cpu'
@@ -278,7 +278,7 @@ def main():
             model.eval()
             group_models[str(test_group)].append(model)
 
-    dataset = H5Dataset(caduceus_file, a2z_file, group_models, group_stats, test_groups)
+    dataset = H5Dataset(caduceus_embeddings_file, a2z_embeddings_file, group_models, group_stats, test_groups)
 
     counter = 0
     out = open(datadir+'predictions_%s.tsv'%EXTRA,'w')
