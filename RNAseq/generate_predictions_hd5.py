@@ -193,8 +193,8 @@ def main():
     datadir = '/Volumes/N1/WP2/Data/'
     groups = np.load(datadir+'group_for_cross_validation.npy', mmap_mode="r", allow_pickle=True)
 
-    caduceus_embeddings_file = '/Volumes/BURAN/Embeddings/embeddings.bd.caduceus.h5'
-    a2z_embeddings_file = '/Volumes/BURAN/Embeddings/embeddings.bd.a2z.h5'
+    caduceus_embeddings_file = '/Volumes/N1/Embeddings/embeddings.bd.caduceus.h5'
+    a2z_embeddings_file = '/Volumes/N1/Embeddings/embeddings.bd.a2z.h5'
 
     TOP_X = 5
     device = 'cpu'
