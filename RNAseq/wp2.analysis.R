@@ -8,14 +8,14 @@ setwd('/Volumes/N1')
 # number of factors
 n<-15
 
-residuals <- read.csv(paste('./PEER/peer_n-',n,'/residuals.csv', sep=''), header=F)
+#residuals <- read.csv(paste('./PEER/peer_n-',n,'/residuals.csv', sep=''), header=F)
 factors <- read.csv(paste('./PEER/peer_n-',n,'/X.csv', sep=''), header=F)
 
-genes<-read.table('./WP2/Data/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
-samples<-read.table('./WP2/Data/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+#genes<-read.table('./WP2/Data/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
+samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
 
-names(residuals)<-samples$V1
-rownames(residuals)<-genes$V1
+#names(residuals)<-samples$V1
+#rownames(residuals)<-genes$V1
 
 df.peer = data.frame('id'= samples$V1, t(factors), stringsAsFactors = F)
 
@@ -23,6 +23,12 @@ df.peer = data.frame('id'= samples$V1, t(factors), stringsAsFactors = F)
 plot(df.peer$X1,df.peer$X2)
 
 #------------------------------- PCA -------------------------------------------
+expression <- read.csv('./WP2/DATA/peer.expression.csv',header = F)
+#genes <- read.csv('./WP2/DATA/peer.genes.csv',header = F)$V1
+#samples <- read.csv('./WP2/DATA/peer.samples.csv',header = F)$V1
+
+#colnames(expression)<-genes
+#rownames(expression)<-samples
 
 pca<-prcomp(expression[, colSums(expression) != 0, drop = FALSE], scale. = TRUE)
 autoplot(pca)
@@ -158,7 +164,7 @@ for (n.factors in 1:14 )
 {
   print(n.factors)
   tmp <- read.csv(paste('./PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
-  samples<-read.table('./WP2/Data/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+  samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
   df = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
   df <- merge(cases.unique, df, by='id')
   df<-data.frame(df)[,c(10:ncol(df))]
@@ -195,7 +201,7 @@ summary(lm(dev_tpm ~ . , data=df))
 # Make linear model controlled for optimal number of PEER factors
 peer.optimal <- 10
 tmp <- read.csv(paste('./PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
-samples<-read.table('./WP2/Data/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
 df.peer.optimal = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
 df <- merge(cases.unique, df.peer.optimal, by='id')
 df<-data.frame(df)[,c(9:ncol(df))]
@@ -217,8 +223,8 @@ residuals <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/residuals.csv', sep='
 factors <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/X.csv', sep=''), header=F)
 #weights <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/W.csv', sep=''), header=F)
 
-genes<-read.table('/Volumes/N1/WP2/Data/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
-samples<-read.table('/Volumes/N1/WP2/Data/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+genes<-read.table('/Volumes/N1/WP2/DATA/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
+samples<-read.table('/Volumes/N1/WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
 
 names(residuals)<-samples$V1
 rownames(residuals)<-genes$V1
@@ -229,9 +235,9 @@ merge()
 
 #---- ------
 
-expression <- read.csv('/Volumes/N1/WP2/Data/peer.expression.csv',header = F)
-genes <- read.csv('/Volumes/N1/WP2/Data/peer.genes.csv',header = F)$V1
-samples <- read.csv('/Volumes/N1/WP2/Data/peer.samples.csv',header = F)$V1
+expression <- read.csv('/Volumes/N1/WP2/DATA/peer.expression.csv',header = F)
+genes <- read.csv('/Volumes/N1/WP2/DATA/peer.genes.csv',header = F)$V1
+samples <- read.csv('/Volumes/N1/WP2/DATA/peer.samples.csv',header = F)$V1
 
 colnames(expression)<-genes
 rownames(expression)<-samples
