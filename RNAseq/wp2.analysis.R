@@ -1,4 +1,5 @@
 library(data.table)
+library(ggfortify)
 
 #set this to the path of the external drive with all the necessary data
 setwd('/Volumes/N1')
@@ -24,11 +25,11 @@ plot(df.peer$X1,df.peer$X2)
 
 #------------------------------- PCA -------------------------------------------
 expression <- read.csv('./WP2/DATA/peer.expression.csv',header = F)
-#genes <- read.csv('./WP2/DATA/peer.genes.csv',header = F)$V1
-#samples <- read.csv('./WP2/DATA/peer.samples.csv',header = F)$V1
+genes <- read.csv('./WP2/DATA/peer.genes.csv',header = F)$V1
+samples <- read.csv('./WP2/DATA/peer.samples.csv',header = F)$V1
 
-#colnames(expression)<-genes
-#rownames(expression)<-samples
+colnames(expression)<-genes
+rownames(expression)<-samples
 
 pca<-prcomp(expression[, colSums(expression) != 0, drop = FALSE], scale. = TRUE)
 autoplot(pca)
@@ -38,7 +39,7 @@ eigenvalues <- pca$sdev^2
 plot(eigenvalues/sum(eigenvalues), type = "b",
      xlab = "Principal Component",
      ylab = "Percentage of Variance Explained")
-abline(v = 2, col = "red")
+#abline(v = 20, col = "red")
 
 df.pca <- data.frame('id' = names(pca$x[,1]),pca$x[,c(1:20)],stringsAsFactors = F)
 
@@ -62,150 +63,166 @@ cor.test(pca.peer$PC2,pca.peer$X2)
 # Assess correlation between observed and predicted for deviation from y_mean among M
 
 # Which model's predictions to analyse, 'none': only caduceus embeddings, 'pred': caduceus embeddings+a2z prediction, 'emb': caduceus+a2z embeddings 
-type <- 'none'
-
-# The dataset with predicted and RNAseq read TPM values for each gene
-data <- read.table(paste('./WP2/DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
-
-# List of primary transcripts
-primary <- read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-
-# Keep only primary transcript predictions
-data<-data[which(data$transcript %in% primary$transcript),]
-# Average predictions from the 5 models into one value
-data$prediction <- (data$model_1_pred+data$model_2_pred+data$model_3_pred+data$model_4_pred+data$model_5_pred)/5
-# Log transform the RNAseq TPM reads
-data$tpm <-log10(1+data$tpm)
-
-length(unique(data$gene))
-length(unique(data$transcript))
-length(unique(data$hash.seq.))/nrow(data)
-
-data<-data[c(1,2,4,5,11,12)]
-
-#Get RNAseq line to plant id translations
-id2line <- read.table('./RNAseq/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
-
-# Label plants according to their RNAseq batch
-batch1<-c(201,202,203,204,205,206,207,208,210,219,220,221,222,223,225,226,227,228,229,230,231,232,233,234,235,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,296,297,298,299,300,301,302,303,304,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,376,377,378,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,399,400)
-batch2<-c(401,402,403,404,405,406,407,408,409,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,434,435,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,475,476,477,478,480,481,482,483,485,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,517,518,519,520,521,522,523,524,525,526,527,528,529,530,531,532,533,534,535,536,537,538,539,540,541,542,543,544,545,546,547,548,549,550,551,552,554,555,556,557,558,559,560,561,562,563,564,565,566,567,568,569,570,571,572,573,574,576,577,578,580,581,582,583,585,586,587,588,589,590,591,592,593,594,595,596,597,598,599,600)
-data$batch <- NA
-data[which(data$id %in% id2line[which(id2line$ID %in% batch1),]$line),]$batch = 'batch1'
-data[which(data$id %in% id2line[which(id2line$ID %in% batch2),]$line),]$batch = 'batch2'
-
-#Get RNAseq QC data and filter out plants that do not meet RNAseq QC limit
-QC.rnaseq <- rbind(read.table("./RNAseq/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./RNAseq/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
-QC.filtered <- id2line[which(id2line$ID %in% QC.rnaseq[which(QC.rnaseq$`Aligned concordantly 1 time` < 70),]$line),]$line
-data<-data[which(!(data$id %in% QC.filtered)),]
-
-# Identify controls
-data$CONTROL <- startsWith(data$id,'C')
-
-# Average consolidate all controls into one averaged dataset
-controls <- data[which(data$CONTROL == TRUE),]
-controls<-aggregate(controls[,5:6], list('gene'=controls$gene), mean)
-
-# seperate out the cases
-cases <- data[which(data$CONTROL == FALSE),]
-
-# Assess correlation between observed and predicted for average expression among meaned controls
-cor(controls$tpm, controls$prediction)
-
-cases$dev_prediction <- NaN
-cases$dev_tpm <- NaN
-dt_controls = data.table(controls)
-dt_cases = data.table(cases)
-
-# Calculate how much each case deviates from controls for each gene
-for (gene_x in unique(cases$gene))
+#type <- 'none'
+for (type in c('none','pred','emb'))
 {
-  dt_cases[gene == gene_x, dev_prediction := prediction - dt_controls[gene == gene_x, prediction]]
-  dt_cases[gene == gene_x, dev_tpm := tpm - dt_controls[gene == gene_x, tpm]]
-}
-
-# remove all rows where the predicted value for control equals the case as they likely have the same sequence (in short both are wild type)
-cases.unique <- dt_cases[which(dt_cases$dev_prediction != 0),]
-
-#plot predicted versus measured tpms
-plot(cases.unique$dev_prediction,cases.unique$dev_tpm)
-model <- lm(dev_tpm ~ dev_prediction, data = cases.unique)
-abline(model, col = "red")
-
-#measure correlation between predicted and measured TPM
-cor(cases.unique$dev_prediction,cases.unique$dev_tpm)
-cor.test(cases.unique$dev_prediction,cases.unique$dev_tpm)
-
-#Try the same for only in cases there the absolute deviation is above 0.01
-tmp <- dt_cases[which(abs(dt_cases$dev_prediction) > 0.01),]
-plot(tmp$dev_prediction,tmp$dev_tpm)
-cor(tmp$dev_prediction,tmp$dev_tpm)
-cor.test(tmp$dev_prediction,tmp$dev_tpm)
-
-# Make linear model controlled for batch
-summary(lm(dev_tpm ~ dev_prediction + batch, data=cases.unique))
-
-# Make linear model adjusted for PCA components
-df <- merge(cases.unique, df.pca, by='id')
-#df<-data.frame(df)[,c(9:ncol(df))] #select all components
-df<-data.frame(df)[,c(9:25)] #select the first 15 components
-summary(lm(dev_tpm ~ . , data=df))
-
-# Make linear model controlled for PEER factors
-df <- merge(cases.unique, df.peer, by='id')
-df<-data.frame(df)[,c(9:ncol(df))] #select all factors
-summary(lm(dev_tpm ~ . , data=df))
-
-library(flexmix)
-
-# plot BIC for models with increasing number of PEER factors included
-#df.BIC <- data.frame('factors'=0,'BIC'=BIC(lm(dev_tpm ~ dev_prediction , data=cases.unique)))
-df.BIC <- data.frame(stringsAsFactors = F)
-for (n.factors in 1:14 )
-{
-  print(n.factors)
-  tmp <- read.csv(paste('./PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
-  samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
-  df = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
-  df <- merge(cases.unique, df, by='id')
-  df<-data.frame(df)[,c(10:ncol(df))]
-  df.BIC <- rbind(df.BIC, data.frame('factors'=n.factors,'BIC'=BIC(lm(dev_tpm ~ . , data=df))))
+  # The dataset with predicted and RNAseq read TPM values for each gene
+  data <- read.table(paste('./WP2/DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
   
+  # List of primary transcripts
+  primary <- read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  
+  # Keep only primary transcript predictions
+  data<-data[which(data$transcript %in% primary$transcript),]
+  # Average predictions from the 5 models into one value
+  data$prediction <- (data$model_1_pred+data$model_2_pred+data$model_3_pred+data$model_4_pred+data$model_5_pred)/5
+  # Log transform the RNAseq TPM reads
+  data$tpm <-log10(1+data$tpm)
+  
+  length(unique(data$gene))
+  length(unique(data$transcript))
+  length(unique(data$hash.seq.))/nrow(data)
+  
+  data<-data[c(1,2,4,5,11,12)]
+  
+  #Get RNAseq line to plant id translations
+  id2line <- read.table('./RNAseq/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  
+  # Label plants according to their RNAseq batch
+  batch1<-c(201,202,203,204,205,206,207,208,210,219,220,221,222,223,225,226,227,228,229,230,231,232,233,234,235,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,296,297,298,299,300,301,302,303,304,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,376,377,378,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,399,400)
+  batch2<-c(401,402,403,404,405,406,407,408,409,411,412,413,414,415,416,417,418,419,420,421,422,423,424,425,426,427,428,429,430,431,434,435,437,438,439,440,441,442,443,444,445,446,447,448,449,450,451,452,453,454,455,456,457,458,459,460,461,462,463,464,465,466,467,468,469,470,471,472,473,475,476,477,478,480,481,482,483,485,489,490,491,492,493,494,495,496,497,498,499,500,501,502,503,504,505,506,507,508,509,510,511,512,513,514,515,516,517,518,519,520,521,522,523,524,525,526,527,528,529,530,531,532,533,534,535,536,537,538,539,540,541,542,543,544,545,546,547,548,549,550,551,552,554,555,556,557,558,559,560,561,562,563,564,565,566,567,568,569,570,571,572,573,574,576,577,578,580,581,582,583,585,586,587,588,589,590,591,592,593,594,595,596,597,598,599,600)
+  data$batch <- NA
+  data[which(data$id %in% id2line[which(id2line$ID %in% batch1),]$line),]$batch = 'batch1'
+  data[which(data$id %in% id2line[which(id2line$ID %in% batch2),]$line),]$batch = 'batch2'
+  
+  #Get RNAseq QC data and filter out plants that do not meet RNAseq QC limit
+  QC.rnaseq <- rbind(read.table("./RNAseq/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./RNAseq/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
+  QC.filtered <- id2line[which(id2line$ID %in% QC.rnaseq[which(QC.rnaseq$`Aligned concordantly 1 time` < 70),]$line),]$line
+  data<-data[which(!(data$id %in% QC.filtered)),]
+  
+  # Identify controls
+  data$CONTROL <- startsWith(data$id,'C')
+  
+  # Average consolidate all controls into one averaged dataset
+  controls <- data[which(data$CONTROL == TRUE),]
+  controls<-aggregate(controls[,5:6], list('gene'=controls$gene), mean)
+  
+  # seperate out the cases
+  cases <- data[which(data$CONTROL == FALSE),]
+  
+  # Assess correlation between observed and predicted for average expression among meaned controls
+  cor(controls$tpm, controls$prediction)
+  
+  cases$dev_prediction <- NaN
+  cases$dev_tpm <- NaN
+  dt_controls = data.table(controls)
+  dt_cases = data.table(cases)
+  
+  # Calculate how much each case deviates from controls for each gene
+  for (gene_x in unique(cases$gene))
+  {
+    dt_cases[gene == gene_x, dev_prediction := prediction - dt_controls[gene == gene_x, prediction]]
+    dt_cases[gene == gene_x, dev_tpm := tpm - dt_controls[gene == gene_x, tpm]]
+  }
+  
+  # remove all rows where the predicted value for control equals the case as they likely have the same sequence (in short both are wild type)
+  cases.unique <- dt_cases[which(dt_cases$dev_prediction != 0),]
+  
+  #plot predicted versus measured tpms
+  plot(cases.unique$dev_prediction,cases.unique$dev_tpm)
+  model <- lm(dev_tpm ~ dev_prediction, data = cases.unique)
+  abline(model, col = "red")
+  
+  #measure correlation between predicted and measured TPM
+  cor(cases.unique$dev_prediction,cases.unique$dev_tpm)
+  cor.test(cases.unique$dev_prediction,cases.unique$dev_tpm)
+  
+  #Try the same for only in cases there the absolute deviation is above 0.01
+  tmp <- dt_cases[which(abs(dt_cases$dev_prediction) > 0.01),]
+  plot(tmp$dev_prediction,tmp$dev_tpm)
+  cor(tmp$dev_prediction,tmp$dev_tpm)
+  cor.test(tmp$dev_prediction,tmp$dev_tpm)
+  
+  # Make linear model controlled for batch
+  summary(lm(dev_tpm ~ dev_prediction + batch, data=cases.unique))
+  
+  # Make linear model adjusted for PCA components
+  df <- merge(cases.unique, df.pca, by='id')
+  #df<-data.frame(df)[,c(9:ncol(df))] #select all components
+  df<-data.frame(df)[,c(9:25)] #select the first 15 components
+  summary(lm(dev_tpm ~ . , data=df))
+  
+  # Make linear model controlled for PEER factors
+  df <- merge(cases.unique, df.peer, by='id')
+  df<-data.frame(df)[,c(9:ncol(df))] #select all factors
+  summary(lm(dev_tpm ~ . , data=df))
+  
+  library(flexmix)
+  
+  # plot BIC for models with increasing number of PEER factors included
+  #df.BIC <- data.frame('factors'=0,'BIC'=BIC(lm(dev_tpm ~ dev_prediction , data=cases.unique)))
+  df.BIC <- data.frame(stringsAsFactors = F)
+  for (n.factors in 1:14 )
+  {
+    print(n.factors)
+    tmp <- read.csv(paste('./PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
+    samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+    df = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
+    df <- merge(cases.unique, df, by='id')
+    df<-data.frame(df)[,c(10:ncol(df))]
+    df.BIC <- rbind(df.BIC, data.frame('factors'=n.factors,'BIC'=BIC(lm(dev_tpm ~ . , data=df))))
+    
+  }
+  
+  plot(df.BIC, type = "b",
+       xlab = "PEER factors",
+       ylab = "BIC")
+  
+  # plot BIC for models with increasing number of PCAs included
+  #df.BIC <- data.frame('factors'=0,'BIC'=BIC(lm(dev_tpm ~ dev_prediction , data=cases.unique)))
+  df.BIC <- data.frame(stringsAsFactors = F)
+  for (n.pca in 1:25 )
+  {
+    print(n.pca)
+    df <- data.frame('id' = names(pca$x[,1]),pca$x[,c(1:n.pca)],stringsAsFactors = F)
+    df <- merge(cases.unique, df, by='id')
+    df<-data.frame(df)[,c(10:(10+n.pca))]
+    df.BIC <- rbind(df.BIC, data.frame('factors'=n.pca,'BIC'=BIC(lm(dev_tpm ~ . , data=df))))
+  }
+  
+  plot(df.BIC, type = "b",
+       xlab = "PCAs included",
+       ylab = "BIC")
+  
+  #........................... FINAL MODELS ......................................
+  
+  results <- list()
+  df.results <- data.frame(stringsAsFactors = F)
+  
+  # Make linear model adjusted for optimal number of PCA components
+  pca.optimal <- 20
+  df <- merge(cases.unique, df.pca, by='id')
+  df<-data.frame(df)[,c(9:(10+pca.optimal))] #select the optimal number of components
+  res<-lm(dev_tpm ~ . , data=df)
+  summary(res)
+  results['PCA'] = list(res)
+  df.results <- rbind(df.results,data.frame('adjustment'=paste('PCA-',pca.optimal,sep=''), 'coef'=coef(summary(res))[2,1],'p'=coef(summary(res))[2,4],stringsAsFactors = F))
+  
+  # Make linear model controlled for optimal number of PEER factors
+  peer.optimal <- 10
+  tmp <- read.csv(paste('./PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
+  samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+  df.peer.optimal = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
+  df <- merge(cases.unique, df.peer.optimal, by='id')
+  df<-data.frame(df)[,c(9:ncol(df))]
+  res <- lm(dev_tpm ~ . , data=df)
+  summary(res)
+  results['PEER'] = list(res)
+  df.results <- rbind(df.results,data.frame('adjustment'=paste('PEER-',peer.optimal,sep=''), 'coef'=coef(summary(res))[2,1],'p'=coef(summary(res))[2,4],stringsAsFactors = F))
+  
+  saveRDS(results,file=paste('./WP2/RESULTS/results.',type,'.rds',sep=''))
+  write.table(df.results,file=paste('./WP2/RESULTS/results',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
 }
-
-plot(df.BIC, type = "b",
-     xlab = "PEER factors",
-     ylab = "BIC")
-
-# plot BIC for models with increasing number of PCAs included
-#df.BIC <- data.frame('factors'=0,'BIC'=BIC(lm(dev_tpm ~ dev_prediction , data=cases.unique)))
-df.BIC <- data.frame(stringsAsFactors = F)
-for (n.pca in 1:25 )
-{
-  print(n.pca)
-  df <- data.frame('id' = names(pca$x[,1]),pca$x[,c(1:n.pca)],stringsAsFactors = F)
-  df <- merge(cases.unique, df, by='id')
-  df<-data.frame(df)[,c(10:(10+n.pca))]
-  df.BIC <- rbind(df.BIC, data.frame('factors'=n.pca,'BIC'=BIC(lm(dev_tpm ~ . , data=df))))
-}
-
-plot(df.BIC, type = "b",
-     xlab = "PCAs included",
-     ylab = "BIC")
-
-# Make linear model adjusted for optimal number of PCA components
-pca.optimal <- 20
-df <- merge(cases.unique, df.pca, by='id')
-df<-data.frame(df)[,c(9:(10+pca.optimal))] #select the optimal number of components
-summary(lm(dev_tpm ~ . , data=df))
-
-# Make linear model controlled for optimal number of PEER factors
-peer.optimal <- 10
-tmp <- read.csv(paste('./PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
-samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
-df.peer.optimal = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
-df <- merge(cases.unique, df.peer.optimal, by='id')
-df<-data.frame(df)[,c(9:ncol(df))]
-summary(lm(dev_tpm ~ . , data=df))
 
 #-------------------------------------END---------------------------------------
 
