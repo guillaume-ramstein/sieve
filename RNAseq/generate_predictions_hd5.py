@@ -116,18 +116,32 @@ class H5Dataset(Dataset):
 
                 #extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
                 #extra_tss_sample = row_a2z['tss_%s'%EXTRA].reshape(1,C_EXTRA,20)
-                extra_tss_sample = row_a2z['tss_%s'%EXTRA]
+                if EXTRA != 'emb':
+                    extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
+                else:
+                    extra_tss_sample = np.transpose(row_a2z['tss_embed'])
+
                 #extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
                 #if EXTRA == 'pred':
                 #    extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
+                #print('extra_tss_sample:')
                 #print(extra_tss_sample.shape)
+                #print('extra_tss_mean:')
+                #print(extra_tss_mean.shape)
+                #print('extra_tss_std:')
+                #print(extra_tss_std.shape)
+                #print('- standardize -')
+                extra_tss_sample = (extra_tss_sample - extra_tss_mean) / extra_tss_std
+                #print('extra_tss_sample:')
                 #print(extra_tss_sample.shape)
 
-                extra_tss_sample = (extra_tss_sample - extra_tss_mean) / extra_tss_std
                 #extra_tss_sample = np.squeeze(extra_tss_sample, axis=0)  # shape: (C_extra, P)
-                #print(tss_sample.shape)
                 #print(extra_tss_sample.shape)
+                #print('tss_sample:')
+                #print(tss_sample.shape)
+                #print('- concat -')
                 tss_sample = np.concatenate([tss_sample, extra_tss_sample], axis=0)   # shape: (1, C + C_extra, P)
+                #print('tss_sample:')
                 #print(tss_sample.shape)
 
                 extra_tts_mean = self.stats[test_group]['tts_%s_mean'%EXTRA]
@@ -135,7 +149,11 @@ class H5Dataset(Dataset):
                 extra_tts_mean = np.squeeze(extra_tts_mean, axis = 0)
                 extra_tts_std = np.squeeze(extra_tts_std, axis = 0)
                 #extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
-                extra_tts_sample = row_a2z['tts_%s'%EXTRA]
+                if EXTRA != 'emb':
+                    extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
+                else:
+                    extra_tts_sample = np.transpose(row_a2z['tts_embed'])
+
                 #extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
                 #if EXTRA == 'pred':
                 #    extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
