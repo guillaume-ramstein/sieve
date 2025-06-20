@@ -1,8 +1,19 @@
 library(data.table)
 library(ggfortify)
+library(ggplot2)
+library(viridis)
+library(MASS)
 
 #set this to the path of the external drive with all the necessary data
 setwd('/Volumes/N1')
+
+get_density <- function(x, y, ...) {
+  dens <- MASS::kde2d(x, y, ...)
+  ix <- findInterval(x, dens$x)
+  iy <- findInterval(y, dens$y)
+  ii <- cbind(ix, iy)
+  return(dens$z[ii])
+}
 
 #---------------------------------- PEER ---------------------------------------
 
@@ -10,7 +21,7 @@ setwd('/Volumes/N1')
 n<-15
 
 #residuals <- read.csv(paste('./PEER/peer_n-',n,'/residuals.csv', sep=''), header=F)
-factors <- read.csv(paste('./PEER/peer_n-',n,'/X.csv', sep=''), header=F)
+factors <- read.csv(paste('./WP2/DATA/PEER/peer_n-',n,'/X.csv', sep=''), header=F)
 
 #genes<-read.table('./WP2/Data/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
 samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
@@ -63,14 +74,14 @@ cor.test(pca.peer$PC2,pca.peer$X2)
 # Assess correlation between observed and predicted for deviation from y_mean among M
 
 # Which model's predictions to analyse, 'none': only caduceus embeddings, 'pred': caduceus embeddings+a2z prediction, 'emb': caduceus+a2z embeddings 
-#type <- 'none'
+#type <- 'emb'
 for (type in c('none','pred','emb'))
 {
   # The dataset with predicted and RNAseq read TPM values for each gene
   data <- read.table(paste('./WP2/DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
   
   # List of primary transcripts
-  primary <- read.table('./INPUT/GENOME/BD/REF/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  primary <- read.table('./WP2/DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
   
   # Keep only primary transcript predictions
   data<-data[which(data$transcript %in% primary$transcript),]
@@ -86,7 +97,7 @@ for (type in c('none','pred','emb'))
   data<-data[c(1,2,4,5,11,12)]
   
   #Get RNAseq line to plant id translations
-  id2line <- read.table('./RNAseq/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  id2line <- read.table('./WP2/DATA/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
   
   # Label plants according to their RNAseq batch
   batch1<-c(201,202,203,204,205,206,207,208,210,219,220,221,222,223,225,226,227,228,229,230,231,232,233,234,235,237,238,239,240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255,256,257,258,259,260,261,262,263,264,265,266,267,268,269,270,271,272,273,274,275,276,277,279,280,282,283,284,285,286,287,288,289,290,291,292,293,294,296,297,298,299,300,301,302,303,304,306,307,308,309,310,311,312,313,314,315,316,317,318,319,320,321,322,323,324,325,326,327,328,329,330,331,332,333,334,335,336,337,338,339,340,341,342,343,344,345,346,347,348,349,350,351,352,353,354,355,356,357,358,359,360,361,362,363,364,365,366,367,368,369,370,371,372,373,374,376,377,378,380,381,382,383,384,385,386,387,388,389,390,391,392,393,394,395,396,397,399,400)
@@ -96,7 +107,7 @@ for (type in c('none','pred','emb'))
   data[which(data$id %in% id2line[which(id2line$ID %in% batch2),]$line),]$batch = 'batch2'
   
   #Get RNAseq QC data and filter out plants that do not meet RNAseq QC limit
-  QC.rnaseq <- rbind(read.table("./RNAseq/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./RNAseq/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
+  QC.rnaseq <- rbind(read.table("./WP2/DATA/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./WP2/DATA/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
   QC.filtered <- id2line[which(id2line$ID %in% QC.rnaseq[which(QC.rnaseq$`Aligned concordantly 1 time` < 70),]$line),]$line
   data<-data[which(!(data$id %in% QC.filtered)),]
   
@@ -112,6 +123,8 @@ for (type in c('none','pred','emb'))
   
   # Assess correlation between observed and predicted for average expression among meaned controls
   cor(controls$tpm, controls$prediction)
+  
+  df.cor<-data.frame('group'='controls','correlation'=  cor(controls$tpm, controls$prediction),'p.value'=cor.test(controls$tpm,controls$prediction)$p.value, stringsAsFactors = F)
   
   cases$dev_prediction <- NaN
   cases$dev_tpm <- NaN
@@ -129,13 +142,23 @@ for (type in c('none','pred','emb'))
   cases.unique <- dt_cases[which(dt_cases$dev_prediction != 0),]
   
   #plot predicted versus measured tpms
-  plot(cases.unique$dev_prediction,cases.unique$dev_tpm)
-  model <- lm(dev_tpm ~ dev_prediction, data = cases.unique)
-  abline(model, col = "red")
-  
+  plot <- ggplot(cases.unique, aes(x=dev_prediction, y=dev_tpm)) + geom_point() + geom_smooth(method = "lm") + ggtitle('Deviations from controls') + xlab('Predicted') + ylab('Observed')
+  ggsave(
+    paste("./WP2/RESULTS/results.plot1.",type,".png",sep=''),
+    plot = plot,
+    device = 'png',
+    scale = 1,
+    width = 10,
+    height = 10,
+    units = "in",
+    dpi = 300,
+    limitsize = TRUE,
+    bg = NULL,
+  )
+
   #measure correlation between predicted and measured TPM
-  cor(cases.unique$dev_prediction,cases.unique$dev_tpm)
-  cor.test(cases.unique$dev_prediction,cases.unique$dev_tpm)
+  df.cor<-rbind(df.cor,data.frame('group'='cases (deviation)','correlation'=  cor(cases.unique$dev_prediction,cases.unique$dev_tpm),'p.value'=cor.test(cases.unique$dev_prediction,cases.unique$dev_tpm)$p.value, stringsAsFactors = F))
+  write.table(df.cor,file=paste('./WP2/RESULTS/results.correlation.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
   
   #Try the same for only in cases there the absolute deviation is above 0.01
   tmp <- dt_cases[which(abs(dt_cases$dev_prediction) > 0.01),]
@@ -165,7 +188,7 @@ for (type in c('none','pred','emb'))
   for (n.factors in 1:14 )
   {
     print(n.factors)
-    tmp <- read.csv(paste('./PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
+    tmp <- read.csv(paste('./WP2/DATA/PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
     samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
     df = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
     df <- merge(cases.unique, df, by='id')
@@ -174,9 +197,23 @@ for (type in c('none','pred','emb'))
     
   }
   
-  plot(df.BIC, type = "b",
-       xlab = "PEER factors",
-       ylab = "BIC")
+  plot <- ggplot(df.BIC, aes(x=factors, y=BIC)) + geom_point(size=3, shape=1) + geom_line() + ggtitle('BIC plot') + xlab('PEER Factors') + ylab('BIC')
+  ggsave(
+    paste("./WP2/RESULTS/results.plot2.",type,".png",sep=''),
+    plot = plot,
+    device = 'png',
+    scale = 1,
+    width = 10,
+    height = 10,
+    units = "in",
+    dpi = 300,
+    limitsize = TRUE,
+    bg = NULL,
+  )
+  
+  #plot(df.BIC, type = "b",
+  #     xlab = "PEER factors",
+  #     ylab = "BIC")
   
   # plot BIC for models with increasing number of PCAs included
   #df.BIC <- data.frame('factors'=0,'BIC'=BIC(lm(dev_tpm ~ dev_prediction , data=cases.unique)))
@@ -190,9 +227,23 @@ for (type in c('none','pred','emb'))
     df.BIC <- rbind(df.BIC, data.frame('factors'=n.pca,'BIC'=BIC(lm(dev_tpm ~ . , data=df))))
   }
   
-  plot(df.BIC, type = "b",
-       xlab = "PCAs included",
-       ylab = "BIC")
+  plot <- ggplot(df.BIC, aes(x=factors, y=BIC)) + geom_point(size=3, shape=1) + geom_line() + ggtitle('BIC plot') + xlab('PCAs') + ylab('BIC')
+  ggsave(
+    paste("./WP2/RESULTS/results.plot3.",type,".png",sep=''),
+    plot = plot,
+    device = 'png',
+    scale = 1,
+    width = 10,
+    height = 10,
+    units = "in",
+    dpi = 300,
+    limitsize = TRUE,
+    bg = NULL,
+  )
+  
+  #plot(df.BIC, type = "b",
+  #     xlab = "PCAs included",
+  #     ylab = "BIC")
   
   #........................... FINAL MODELS ......................................
   
@@ -210,7 +261,7 @@ for (type in c('none','pred','emb'))
   
   # Make linear model controlled for optimal number of PEER factors
   peer.optimal <- 10
-  tmp <- read.csv(paste('./PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
+  tmp <- read.csv(paste('./WP2/DATA/PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
   samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
   df.peer.optimal = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
   df <- merge(cases.unique, df.peer.optimal, by='id')
@@ -220,8 +271,8 @@ for (type in c('none','pred','emb'))
   results['PEER'] = list(res)
   df.results <- rbind(df.results,data.frame('adjustment'=paste('PEER-',peer.optimal,sep=''), 'coef'=coef(summary(res))[2,1],'p'=coef(summary(res))[2,4],stringsAsFactors = F))
   
-  saveRDS(results,file=paste('./WP2/RESULTS/results.',type,'.rds',sep=''))
-  write.table(df.results,file=paste('./WP2/RESULTS/results',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
+  saveRDS(results,file=paste('./WP2/RESULTS/results.model.',type,'.rds',sep=''))
+  write.table(df.results,file=paste('./WP2/RESULTS/results.model.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
 }
 
 #-------------------------------------END---------------------------------------
