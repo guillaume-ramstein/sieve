@@ -70,97 +70,112 @@ class H5Dataset(Dataset):
         row_caduceus = self.table_caduceus[idx]
         gene = row_caduceus['gene'].decode()
 
-
         if gene in self.test_groups:
             test_group = self.test_groups[gene]
             EXTRA = self.stats[test_group]['EXTRA']
 
-            tss_mean = self.stats[test_group]['tss_mean']
-            tss_std = self.stats[test_group]['tss_std']
-            tts_mean = self.stats[test_group]['tts_mean']
-            tts_std = self.stats[test_group]['tts_std']
-
-            tss_mean = np.squeeze(tss_mean, axis = 0)
-            tss_std = np.squeeze(tss_std, axis = 0)
-            tts_mean = np.squeeze(tts_mean, axis = 0)
-            tts_std = np.squeeze(tts_std, axis = 0)
-
-            #print(tss_mean.shape)
-            #print(tss_std.shape)
-
-            # Load and standardize tss
-            tss_sample = np.transpose(row_caduceus['tss'])
-            #print(tss_sample.shape)
-            tss_sample = (tss_sample - tss_mean) / tss_std
-            #print(tss_sample.shape)
-
-            #print(tss_sample)
-
-            # Load and standardize tts
-            tts_sample = np.transpose(row_caduceus['tts'])
-            tts_sample = (tts_sample - tts_mean) / tts_std
-            #print(tss_sample)
-
-            #if row_caduceus['hash'] != row_a2z['hash']:
-            #    print('Warning: gene %s has differing caduceus and a2z hashes'%gene)
-
-            if EXTRA != 'none':
+            if EXTRA == 'a2z':
                 row_a2z = self.table_a2z[idx]
-                if gene != row_a2z['gene'].decode():
-                    print('Error: caduceus and a2z row mismatch at index: %'%idx)
-                    exit(0)
-                extra_tss_mean = self.stats[test_group]['tss_%s_mean'%EXTRA]
-                extra_tss_std = self.stats[test_group]['tss_%s_std'%EXTRA]
-                extra_tss_mean = np.squeeze(extra_tss_mean, axis = 0)
-                extra_tss_std = np.squeeze(extra_tss_std, axis = 0)
+                tss_mean = self.stats[test_group]['tss_emb_mean']
+                tss_std = self.stats[test_group]['tss_emb_std']
+                tss_mean = np.squeeze(tss_mean, axis = 0)
+                tss_std = np.squeeze(tss_std, axis = 0)
+                tss_sample = np.transpose(row_a2z['tss_embed'])
+                tss_sample = (tss_sample - tss_mean) / tss_std
 
-                #extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
-                #extra_tss_sample = row_a2z['tss_%s'%EXTRA].reshape(1,C_EXTRA,20)
-                if EXTRA != 'emb':
-                    extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
-                else:
-                    extra_tss_sample = np.transpose(row_a2z['tss_embed'])
+                tts_mean = self.stats[test_group]['tts_emb_mean']
+                tts_std = self.stats[test_group]['tts_emb_std']
+                tts_mean = np.squeeze(tts_mean, axis = 0)
+                tts_std = np.squeeze(tts_std, axis = 0)
+                tts_sample = np.transpose(row_a2z['tts_embed'])
+                tts_sample = (tts_sample - tts_mean) / tts_std
+            else:
+                tss_mean = self.stats[test_group]['tss_mean']
+                tss_std = self.stats[test_group]['tss_std']
+                tts_mean = self.stats[test_group]['tts_mean']
+                tts_std = self.stats[test_group]['tts_std']
 
-                #extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
-                #if EXTRA == 'pred':
-                #    extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
-                #print('extra_tss_sample:')
-                #print(extra_tss_sample.shape)
-                #print('extra_tss_mean:')
-                #print(extra_tss_mean.shape)
-                #print('extra_tss_std:')
-                #print(extra_tss_std.shape)
-                #print('- standardize -')
-                extra_tss_sample = (extra_tss_sample - extra_tss_mean) / extra_tss_std
-                #print('extra_tss_sample:')
-                #print(extra_tss_sample.shape)
+                tss_mean = np.squeeze(tss_mean, axis = 0)
+                tss_std = np.squeeze(tss_std, axis = 0)
+                tts_mean = np.squeeze(tts_mean, axis = 0)
+                tts_std = np.squeeze(tts_std, axis = 0)
 
-                #extra_tss_sample = np.squeeze(extra_tss_sample, axis=0)  # shape: (C_extra, P)
-                #print(extra_tss_sample.shape)
-                #print('tss_sample:')
+                #print(tss_mean.shape)
+                #print(tss_std.shape)
+
+                # Load and standardize tss
+                tss_sample = np.transpose(row_caduceus['tss'])
                 #print(tss_sample.shape)
-                #print('- concat -')
-                tss_sample = np.concatenate([tss_sample, extra_tss_sample], axis=0)   # shape: (1, C + C_extra, P)
-                #print('tss_sample:')
+                tss_sample = (tss_sample - tss_mean) / tss_std
                 #print(tss_sample.shape)
 
-                extra_tts_mean = self.stats[test_group]['tts_%s_mean'%EXTRA]
-                extra_tts_std = self.stats[test_group]['tts_%s_std'%EXTRA]
-                extra_tts_mean = np.squeeze(extra_tts_mean, axis = 0)
-                extra_tts_std = np.squeeze(extra_tts_std, axis = 0)
-                #extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
-                if EXTRA != 'emb':
-                    extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
-                else:
-                    extra_tts_sample = np.transpose(row_a2z['tts_embed'])
+                #print(tss_sample)
 
-                #extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
-                #if EXTRA == 'pred':
-                #    extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
+                # Load and standardize tts
+                tts_sample = np.transpose(row_caduceus['tts'])
+                tts_sample = (tts_sample - tts_mean) / tts_std
+                #print(tss_sample)
 
-                extra_tts_sample = (extra_tts_sample - extra_tts_mean) / extra_tts_std
-                #extra_tts_sample = np.squeeze(extra_tts_sample, axis=0)  # shape: (C_extra, P)
-                tts_sample = np.concatenate([tts_sample, extra_tts_sample], axis=0)   # shape: (1, C + C_extra, P)
+                #if row_caduceus['hash'] != row_a2z['hash']:
+                #    print('Warning: gene %s has differing caduceus and a2z hashes'%gene)
+
+                if EXTRA != 'none':
+                    row_a2z = self.table_a2z[idx]
+                    if gene != row_a2z['gene'].decode():
+                        print('Error: caduceus and a2z row mismatch at index: %'%idx)
+                        exit(0)
+                    extra_tss_mean = self.stats[test_group]['tss_%s_mean'%EXTRA]
+                    extra_tss_std = self.stats[test_group]['tss_%s_std'%EXTRA]
+                    extra_tss_mean = np.squeeze(extra_tss_mean, axis = 0)
+                    extra_tss_std = np.squeeze(extra_tss_std, axis = 0)
+
+                    #extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
+                    #extra_tss_sample = row_a2z['tss_%s'%EXTRA].reshape(1,C_EXTRA,20)
+                    if EXTRA != 'emb':
+                        extra_tss_sample = np.transpose(row_a2z['tss_%s'%EXTRA])
+                    else:
+                        extra_tss_sample = np.transpose(row_a2z['tss_embed'])
+
+                    #extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
+                    #if EXTRA == 'pred':
+                    #    extra_tss_sample = np.expand_dims(extra_tss_sample, axis=0)
+                    #print('extra_tss_sample:')
+                    #print(extra_tss_sample.shape)
+                    #print('extra_tss_mean:')
+                    #print(extra_tss_mean.shape)
+                    #print('extra_tss_std:')
+                    #print(extra_tss_std.shape)
+                    #print('- standardize -')
+                    extra_tss_sample = (extra_tss_sample - extra_tss_mean) / extra_tss_std
+                    #print('extra_tss_sample:')
+                    #print(extra_tss_sample.shape)
+
+                    #extra_tss_sample = np.squeeze(extra_tss_sample, axis=0)  # shape: (C_extra, P)
+                    #print(extra_tss_sample.shape)
+                    #print('tss_sample:')
+                    #print(tss_sample.shape)
+                    #print('- concat -')
+                    tss_sample = np.concatenate([tss_sample, extra_tss_sample], axis=0)   # shape: (1, C + C_extra, P)
+                    #print('tss_sample:')
+                    #print(tss_sample.shape)
+
+                    extra_tts_mean = self.stats[test_group]['tts_%s_mean'%EXTRA]
+                    extra_tts_std = self.stats[test_group]['tts_%s_std'%EXTRA]
+                    extra_tts_mean = np.squeeze(extra_tts_mean, axis = 0)
+                    extra_tts_std = np.squeeze(extra_tts_std, axis = 0)
+                    #extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
+                    if EXTRA != 'emb':
+                        extra_tts_sample = np.transpose(row_a2z['tts_%s'%EXTRA])
+                    else:
+                        extra_tts_sample = np.transpose(row_a2z['tts_embed'])
+
+                    #extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
+                    #if EXTRA == 'pred':
+                    #    extra_tts_sample = np.expand_dims(extra_tts_sample, axis=0)
+
+                    extra_tts_sample = (extra_tts_sample - extra_tts_mean) / extra_tts_std
+                    #extra_tts_sample = np.squeeze(extra_tts_sample, axis=0)  # shape: (C_extra, P)
+                    tts_sample = np.concatenate([tts_sample, extra_tts_sample], axis=0)   # shape: (1, C + C_extra, P)
 
             #tss_sample = np.expand_dims(tss_sample, axis=0)
             #tts_sample = np.expand_dims(tts_sample, axis=0)
@@ -199,8 +214,8 @@ def Predic(models, dataloader, device, criterion):
     return avg_loss, predictions
 
 def main():
-    # none, pred or emb
-    EXTRA = "pred"
+    # Set to either: none, pred, emb or a2z
+    EXTRA = "none"
 
     caduceus_file = '/Volumes/N1/Embeddings/data.csv'
     translation_file = '/Volumes/N1/INPUT/GENOME/BD/gene.id.translation.tsv'
@@ -212,7 +227,7 @@ def main():
     groups = np.load(datadir+'group_for_cross_validation.npy', mmap_mode="r", allow_pickle=True)
 
     caduceus_embeddings_file = '/Volumes/N1/Embeddings/embeddings.bd.caduceus.h5'
-    a2z_embeddings_file = '/Volumes/N1/Embeddings/embeddings.bd.a2z.h5'
+    a2z_embeddings_file = '/Volumes/N1/Embeddings/old/embeddings.bd.a2z.h5'
 
     TOP_X = 5
     device = 'cpu'
@@ -235,33 +250,44 @@ def main():
         train_groups_str = "_".join(map(str, np.sort(train_groups)))
 
         stats = np.load(datadir+'global_stats_train_%s.npz'%train_groups_str)
-
         group_stats[test_group] = {'EXTRA':EXTRA,'tss_mean':stats['tss_mean'],'tss_std':stats['tss_std'],'tts_mean':stats['tts_mean'],'tts_std':stats['tts_std'],'tss_pred_mean':stats['tss_pred_mean'],'tss_pred_std':stats['tss_pred_std'],'tts_pred_mean':stats['tts_pred_mean'],'tts_pred_std':stats['tts_pred_std'],'tss_emb_mean':stats['tss_emb_mean'],'tss_emb_std':stats['tss_emb_std'],'tts_emb_mean':stats['tts_emb_mean'],'tts_emb_std':stats['tts_emb_std']}
-
-        base_channels = group_stats[test_group]['tss_mean'].shape[1]
-
-        if EXTRA == "none":
-            extra_channels = 0
-        elif EXTRA == "pred":
-            extra_channels = group_stats[test_group]['tss_pred_std'].shape[1]
-        elif EXTRA == "emb":
-            extra_channels = group_stats[test_group]['tss_emb_std'].shape[1]
-        else:
-            print('Unknown EXTRA: %s'%EXTRA)
-            exit(0)
-
-        #extra_channels = group_stats[test_group]['extra_tss_std'].shape[1] if EXTRA != "none" else 0
-        in_channels = base_channels + extra_channels
         stats.close()
 
-        # ------------------------------------------------------------------------
-        # 7. Locate top-X trials CSV
-        # ------------------------------------------------------------------------
-        run_dir = os.path.join(
-            datadir,
-            f"val{val_group}_test{test_group}",
-            "base_models" if EXTRA=="none" else f"full_models_{EXTRA}"
-        )
+        if EXTRA == 'a2z':
+            in_channels = group_stats[test_group]['tss_emb_mean'].shape[1]
+
+            # ------------------------------------------------------------------------
+            # 7. Locate top-X trials CSV
+            # ------------------------------------------------------------------------
+            run_dir = os.path.join(
+                datadir,
+                f"val{val_group}_test{test_group}",
+                "a2z_emb_only"
+            )
+        else:
+            base_channels = group_stats[test_group]['tss_mean'].shape[1]
+
+            if EXTRA == "none":
+                extra_channels = 0
+            elif EXTRA == "pred":
+                extra_channels = group_stats[test_group]['tss_pred_std'].shape[1]
+            elif EXTRA == "emb":
+                extra_channels = group_stats[test_group]['tss_emb_std'].shape[1]
+            else:
+                print('Unknown EXTRA: %s'%EXTRA)
+                exit(0)
+
+            #extra_channels = group_stats[test_group]['extra_tss_std'].shape[1] if EXTRA != "none" else 0
+            in_channels = base_channels + extra_channels
+
+            # ------------------------------------------------------------------------
+            # 7. Locate top-X trials CSV
+            # ------------------------------------------------------------------------
+            run_dir = os.path.join(
+                datadir,
+                f"val{val_group}_test{test_group}",
+                "base_models" if EXTRA=="none" else f"full_models_{EXTRA}"
+            )
         CHECKPOINTS_DIR = run_dir
         TRIALS_CSV = os.path.join(CHECKPOINTS_DIR, "trial_results.csv")
 
