@@ -12,7 +12,7 @@ def GetTranslation(file):
             header = False
             continue
         items = line.strip('\n').split('\t')
-        translation[items[0]] = items[1]
+        translation['%i'%int(items[0])] = items[1]
     return(translation)
 
 def MakeObservations(file_in, file_out, translation):
