@@ -130,7 +130,7 @@ def main():
     MakePEERDataset(tpm_file, peer_dir, translation)
     observations = GetObservations(tpm_file, translation)
 
-    for type in ['none', 'pred', 'emb']:
+    for type in ['none', 'pred', 'emb', 'a2z']:
         print('MAking WP2 dataset for %s'%type)
         MakeRDataset('/Volumes/N1/WP2/Data/predictions_%s.tsv'%type, '/Volumes/N1/WP2/Data/wp2.dataset_%s.tsv'%type, observations)
 
