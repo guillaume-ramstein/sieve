@@ -50,25 +50,35 @@ This is the order of running scripts for each section.
 1. RNAseq processing sequence:
 
 	(a) RNAseq.pipeline.sh
+
 	(b) RNAseq.QC.py
+
 	(c) RNAseq.R
 
 3. Embedding processing for training:
 
 	(a) prepare.sequences.py
+
 	(b) sequence2embedding.a2z.py
+
 	(c) sequence2embedding.caduceus.py
 
 2. Embedding processing for prediction:
 
 	(a) make.bd.data.py
+
 	(b) make.bd.sequences.py
+
 	(c) make.bd.embedding.a2z.py
+
 	(d) make.bd.embedding.caduceus.py
+
 	(e) generate_predictions_hd5.py
 
-3. Analysis:
+4. Analysis:
 
 	(a) make.wp2.dataset.py
+
 	(b) peer.sh
+
   	(c) wp2.analysis.R
