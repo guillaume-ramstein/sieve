@@ -48,11 +48,12 @@ wp2.analysis.R: This script does the final analysis of the predicted versus meas
 This is the order of running scripts for each section.
 
 1. RNAseq processing sequence:
+
 	(a) RNAseq.pipeline.sh
 	(b) RNAseq.QC.py
 	(c) RNAseq.R
 
-2. Embedding processing for training:
+3. Embedding processing for training:
 
 	(a) prepare.sequences.py
 	(b) sequence2embedding.a2z.py
@@ -67,6 +68,7 @@ This is the order of running scripts for each section.
 	(e) generate_predictions_hd5.py
 
 3. Analysis:
+
 	(a) make.wp2.dataset.py
 	(b) peer.sh
   	(c) wp2.analysis.R
