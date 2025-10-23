@@ -233,16 +233,14 @@ def Cohort(fam_file):
     for line in fam_file:
         items = line.strip('\n').split(' ')
 
-        # We only include M3 variants, and skip M5
-        if items[0][:3] != 'M5_':
-            cohort.append(items[0])
+        cohort.append(items[0])
     fam_file.close()
     return cohort
 
 def main():
-    fasta_file = '/Volumes/N1/INPUT/GENOME/BD/REF/assembly/BdistachyonBd21_3_537_v1.0.fa'
-    gff_file = '/Volumes/N1/INPUT/GENOME/BD/REF/annotation/BdistachyonBd21_3_537_v1.2.gene.gff3'
-    bed_file = '/Volumes/N1/INPUT/GENOME/BD/M5/snps.combined'
+    fasta_file = '/Volumes/N1/Embeddings/BdistachyonBd21_3_537_v1.0.fa'
+    gff_file = '/Volumes/N1/Embeddings/BdistachyonBd21_3_537_v1.2.gene.gff3'
+    bed_file = '/Volumes/N1/Embeddings/snps.combined.M5.filtered.renamed'
     sequences_file = '/Volumes/N1/Embeddings/data.bd.csv'
     stats_file = '/Volumes/N1/Embeddings/stats.tsv'
 
@@ -252,14 +250,9 @@ def main():
     cohort = Cohort(bed_file+'.fam')
     chromosomes = FASTA(fasta_file)
     bed = BEDBUG(bed_file)
-    translation = TranslateID('/Volumes/N1/INPUT/GENOME/BD/gene.id.translation.tsv')
+    translation = TranslateID('/Volumes/N1/Embeddings/gene.id.translation.tsv')
 
-    buffer_size = 500
-    tss_upstream = 4000 + buffer_size
-    tss_downstream = 1000 + buffer_size
-
-    tts_upstream = 1000 + buffer_size
-    tts_downstream = 4000 + buffer_size
+    sequence_size = 10000
 
     counter = 0
     done = False
@@ -284,10 +277,10 @@ def main():
                 skipped += 1
                 continue
 
-            tss_start = mrna.start - tss_upstream
-            tss_end = mrna.start + tss_downstream
-            tts_start = mrna.end - tts_upstream
-            tts_end = mrna.end + tts_downstream
+            tss_start = mrna.start - int(sequence_size/2)
+            tss_end = mrna.start + int(sequence_size/2)
+            tts_start = mrna.end - int(sequence_size/2)
+            tts_end = mrna.end + int(sequence_size/2)
 
             if tss_start < 0 or tts_end >= len(chromosomes[mrna.chr]):
                 skipped += 1
@@ -309,7 +302,7 @@ def main():
 
             for h in sequences:
                 counter+=1
-                sequences_file.write('"%s","%s","%s","%s","%s","%s",%s,%s,%s\n'%(counter,mrna.gene,bd21,mrna.id,'N'*2000+sequences[h].tss+'N'*2000,'N'*2000+sequences[h].tts+'N'*2000,'NA','NA',' '.join(sequences[h].cohort)))
+                sequences_file.write('"%s","%s","%s","%s","%s","%s",%s,%s,%s\n'%(counter,mrna.gene,bd21,mrna.id,sequences[h].tss,sequences[h].tts,'NA','NA',' '.join(sequences[h].cohort)))
                 if not counter % 5000:
                     print('seqs: %i'%counter)
         if done:
