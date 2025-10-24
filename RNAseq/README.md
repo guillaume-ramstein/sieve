@@ -69,13 +69,15 @@ This is the order of running scripts for each section.
 
 	(a) make.bd.data.py
 
-	(b) make.bd.sequences.py
+	(a) make.bdi.data.py
 
-	(c) make.bd.embedding.a2z.py
+	(c) make.bd.sequences.py
 
-	(d) make.bd.embedding.caduceus.py
+	(d) make.bd.embedding.a2z.py
 
-	(e) generate_predictions_hd5.py
+	(e) make.bd.embedding.caduceus.py
+
+	(f) generate_predictions_hd5.py
 
 4. Analysis:
 
