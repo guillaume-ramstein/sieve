@@ -31,6 +31,8 @@ FASTA.py, bedbug.py, mRNA.py: Tools needed by make.bd.data.py
 
 make.bd.data.py: This script generates unique TTS and TSS sequences containing variants for each gene, for each plant. It needs a fasta file defining sequences (BdistachyonBd21_3_537_v1.0.fa), gff defining genes (annotation/BdistachyonBd21_3_537_v1.2.gene.gff3), bed/bim/fam files defining all variants (snps.combined.*), a file (gene.id.translation.tsv) providing gene id translations between BD21 and BD21.3. The script generates sequences in the file (data.bd.csv) which generally imitates the format of the file (data.csv) which contains the published Phytoexpr training data, and stats into the file (stats.tsv) counting number of unique sequences per transcript.
 
+make.bdi.data.py: This scripts takes the output from make.bd.data.py (data.bd.tsv) and reformats the data for prediction generation by the PhytoEXPR team using their model. 
+
 make.bd.sequences.py: This scripts takes the output from make.bd.data.py (data.bd.tsv) and prepares the sequences for a2z embedding extraction in the file (bd.sequences.a2z.tsv), and for caduceus embedding extraction in the file (bd.sequences.caduceus.tsv). 
 
 make.bd.embedding.a2z.py: This script takes the prepared sequences in the file (bd.sequences.a2z.tsv), extracts a2z embeddings which are output into (embeddings.bd.a2z.h5).
