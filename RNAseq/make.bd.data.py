@@ -238,11 +238,14 @@ def Cohort(fam_file):
     return cohort
 
 def main():
-    fasta_file = '/Volumes/N1/Embeddings/BdistachyonBd21_3_537_v1.0.fa'
-    gff_file = '/Volumes/N1/Embeddings/BdistachyonBd21_3_537_v1.2.gene.gff3'
-    bed_file = '/Volumes/N1/Embeddings/snps.combined.M5.filtered.renamed'
-    sequences_file = '/Volumes/N1/Embeddings/data.bd.csv'
-    stats_file = '/Volumes/N1/Embeddings/stats.tsv'
+    workdir = '/Volumes/N1/Embeddings/DATA/'
+
+    fasta_file = workdir+'BdistachyonBd21_3_537_v1.0.fa'
+    gff_file = workdir+'BdistachyonBd21_3_537_v1.2.gene.gff3'
+    bed_file = workdir+'snps.combined.M5.filtered.renamed'
+    sequences_file = workdir+'data.bd.csv'
+    stats_file = workdir+'stats.tsv'
+    translation_file = workdir+'gene.id.translation.tsv'
 
     stats_file = open(stats_file,'w')
     stats_file.write('transcript\tsequences\n')
@@ -250,7 +253,7 @@ def main():
     cohort = Cohort(bed_file+'.fam')
     chromosomes = FASTA(fasta_file)
     bed = BEDBUG(bed_file)
-    translation = TranslateID('/Volumes/N1/Embeddings/gene.id.translation.tsv')
+    translation = TranslateID(translation_file)
 
     sequence_size = 10000
 

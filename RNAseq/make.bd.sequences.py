@@ -42,8 +42,8 @@ def ExportSequences(filein, fileout, core_sequence_length = 250, model_input_siz
         transcript = items[3].strip('"')
         promoter =  items[4].strip('"')
         terminator =  items[5].strip('"')
-        promoter = ('N'*500)+promoter[2000:len(promoter)-2000]+('N'*3500)
-        terminator = ('N'*3500) + terminator[2000:len(terminator)-2000] + ('N'*500)
+        #promoter = ('N'*500)+promoter[2000:len(promoter)-2000]+('N'*3500)
+        #terminator = ('N'*3500) + terminator[2000:len(terminator)-2000] + ('N'*500)
         group =  items[8].strip('"')
 
         if promoter == 'NA' or terminator == 'NA':
@@ -65,7 +65,7 @@ def ExportSequences(filein, fileout, core_sequence_length = 250, model_input_siz
     print('Exported %i sequences, skipped %i'%(counter, skipped))
 
 def main():
-    workdir = '/media/shd-sieve/BURAN/Embeddings/'
+    workdir = '/Volumes/N1/Embeddings/DATA/'
 
     print('Exporting Caduceus sequences.')
     ExportSequences(workdir+'data.bd.csv', workdir+'bd.sequences.caduceus.tsv', 250, 512)
