@@ -5,7 +5,7 @@ library(viridis)
 library(MASS)
 
 #set this to the path of the external drive with all the necessary data
-setwd('/Volumes/N1')
+setwd('/Volumes/N1/Embeddings')
 
 get_density <- function(x, y, ...) {
   dens <- MASS::kde2d(x, y, ...)
@@ -21,10 +21,10 @@ get_density <- function(x, y, ...) {
 n.factors<-10
 
 #residuals <- read.csv(paste('./PEER/peer_n-',n,'/residuals.csv', sep=''), header=F)
-factors <- read.csv(paste('./WP2/DATA/PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
+factors <- read.csv(paste('./DATA/PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
 
-#genes<-read.table('./WP2/Data/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
-samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+#genes<-read.table('./DATA/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
+samples<-read.table('./DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
 
 #names(residuals)<-samples$V1
 #rownames(residuals)<-genes$V1
@@ -35,9 +35,9 @@ df.peer = data.frame('id'= samples$V1, t(factors), stringsAsFactors = F)
 plot(df.peer$X1,df.peer$X2)
 
 #------------------------------- PCA -------------------------------------------
-expression <- read.csv('./WP2/DATA/peer.expression.csv',header = F)
-genes <- read.csv('./WP2/DATA/peer.genes.csv',header = F)$V1
-samples <- read.csv('./WP2/DATA/peer.samples.csv',header = F)$V1
+expression <- read.csv('./DATA/peer.expression.csv',header = F)
+genes <- read.csv('./DATA/peer.genes.csv',header = F)$V1
+samples <- read.csv('./DATA/peer.samples.csv',header = F)$V1
 
 colnames(expression)<-genes
 rownames(expression)<-samples
@@ -74,15 +74,13 @@ cor.test(pca.peer$PC2,pca.peer$X2)
 # Assess correlation between observed and predicted for deviation from y_mean among M
 
 # Which model's predictions to analyse, 'none': only caduceus embeddings, 'pred': caduceus embeddings+a2z prediction, 'emb': caduceus+a2z embeddings 
-#type <- 'emb'
 for (type in c('none','pred', 'a2z', 'emb'))
 {
   # The dataset with predicted and RNAseq read TPM values for each gene
-  #data <- read.table(paste('./WP2/DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
-  data <- read.table(paste('./WP2/DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
+  data <- read.table(paste('./DATA/wp2.dataset_',type,'.tsv',sep=''), header=T, sep='\t',fill=T,colClasses = c('character','character','character','character','integer','double','double','double','double','double','double'),stringsAsFactors = F)
   
   # List of primary transcripts
-  primary <- read.table('./WP2/DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  primary <- read.table('./DATA/BdistachyonBd21_3_537_v1.2.protein_primaryTranscriptOnly.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
   
   # Keep only primary transcript predictions
   data<-data[which(data$transcript %in% primary$transcript),]
@@ -98,7 +96,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
   data<-data[c(1,2,4,5,11,12)]
   
   #Get RNAseq line to plant id translations
-  id2line <- read.table('./WP2/DATA/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
+  id2line <- read.table('./DATA/RNAseq/RNAseq.ids.tsv', header=T, sep='\t',fill=T,stringsAsFactors = F)
   
   
   # Label plants according to their RNAseq batch
@@ -113,7 +111,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
   data[which(data$id %in% id2line[which(id2line$ID %in% batch4),]$line),]$batch = 'batch4'
 
   #Get RNAseq QC data and filter out plants that do not meet RNAseq QC limit
-  QC.rnaseq <- rbind(read.table("./WP2/DATA/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./WP2/DATA/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./WP2/DATA/90-1147085216/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./WP2/DATA/90-1080311147/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
+  QC.rnaseq <- rbind(read.table("./DATA/RNAseq/90-1106610255/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./DATA/RNAseq/90-1120364334/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./DATA/RNAseq/90-1147085216/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F),read.table("./DATA/RNAseq/90-1080311147/01_output/QC.tsv", header=T, sep='\t',fill=T,check.names = F,stringsAsFactors = F))
   QC.filtered <- id2line[which(id2line$ID %in% QC.rnaseq[which(QC.rnaseq$`Aligned concordantly 1 time` < 70),]$line),]$line
   data<-data[which(!(data$id %in% QC.filtered)),]
   
@@ -150,7 +148,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
   #plot predicted versus measured tpms
   plot <- ggplot(cases.unique, aes(x=dev_prediction, y=dev_tpm)) + geom_point() + geom_smooth(method = "lm") + ggtitle('Deviations from controls') + xlab('Predicted') + ylab('Observed')
   ggsave(
-    paste("./WP2/RESULTS/results.plot1.",type,".png",sep=''),
+    paste("./RESULTS/results.plot1.",type,".png",sep=''),
     plot = plot,
     device = 'png',
     scale = 1,
@@ -164,7 +162,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
 
   #measure correlation between predicted and measured TPM
   df.cor<-rbind(df.cor,data.frame('group'='cases (deviation)','correlation'=  cor(cases.unique$dev_prediction,cases.unique$dev_tpm),'p.value'=cor.test(cases.unique$dev_prediction,cases.unique$dev_tpm)$p.value, stringsAsFactors = F))
-  write.table(df.cor,file=paste('./WP2/RESULTS/results.correlation.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
+  write.table(df.cor,file=paste('./RESULTS/results.correlation.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
   
   #Try the same for only in cases there the absolute deviation is above 0.01
   tmp <- dt_cases[which(abs(dt_cases$dev_prediction) > 0.01),]
@@ -194,8 +192,8 @@ for (type in c('none','pred', 'a2z', 'emb'))
   for (n.factors in 1:n.factors )
   {
     print(n.factors)
-    tmp <- read.csv(paste('./WP2/DATA/PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
-    samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+    tmp <- read.csv(paste('./DATA/PEER/peer_n-',n.factors,'/X.csv', sep=''), header=F)
+    samples<-read.table('./DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
     df = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
     df <- merge(cases.unique, df, by='id')
     df<-data.frame(df)[,c(10:ncol(df))]
@@ -205,7 +203,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
   
   plot <- ggplot(df.BIC, aes(x=factors, y=BIC)) + geom_point(size=3, shape=1) + geom_line() + ggtitle('BIC plot') + xlab('PEER Factors') + ylab('BIC')
   ggsave(
-    paste("./WP2/RESULTS/results.plot2.",type,".png",sep=''),
+    paste("./RESULTS/results.plot2.",type,".png",sep=''),
     plot = plot,
     device = 'png',
     scale = 1,
@@ -235,7 +233,7 @@ for (type in c('none','pred', 'a2z', 'emb'))
   
   plot <- ggplot(df.BIC, aes(x=factors, y=BIC)) + geom_point(size=3, shape=1) + geom_line() + ggtitle('BIC plot') + xlab('PCAs') + ylab('BIC')
   ggsave(
-    paste("./WP2/RESULTS/results.plot3.",type,".png",sep=''),
+    paste("./RESULTS/results.plot3.",type,".png",sep=''),
     plot = plot,
     device = 'png',
     scale = 1,
@@ -267,8 +265,8 @@ for (type in c('none','pred', 'a2z', 'emb'))
   
   # Make linear model controlled for optimal number of PEER factors
   peer.optimal <- 10
-  tmp <- read.csv(paste('./WP2/DATA/PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
-  samples<-read.table('./WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+  tmp <- read.csv(paste('./DATA/PEER/peer_n-',peer.optimal,'/X.csv', sep=''), header=F)
+  samples<-read.table('./DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
   df.peer.optimal = data.frame('id'= samples$V1, t(tmp), stringsAsFactors = F)
   df <- merge(cases.unique, df.peer.optimal, by='id')
   df<-data.frame(df)[,c(9:ncol(df))]
@@ -277,8 +275,8 @@ for (type in c('none','pred', 'a2z', 'emb'))
   results['PEER'] = list(res)
   df.results <- rbind(df.results,data.frame('adjustment'=paste('PEER-',peer.optimal,sep=''), 'coef'=coef(summary(res))[2,1],'p'=coef(summary(res))[2,4],stringsAsFactors = F))
   
-  saveRDS(results,file=paste('./WP2/RESULTS/results.model.',type,'.rds',sep=''))
-  write.table(df.results,file=paste('./WP2/RESULTS/results.model.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
+  saveRDS(results,file=paste('./RESULTS/results.model.',type,'.rds',sep=''))
+  write.table(df.results,file=paste('./RESULTS/results.model.',type,'.tsv',sep=''), sep='\t', quote = F, row.names = F)
 }
 
 #-------------------------------------END---------------------------------------
@@ -297,8 +295,8 @@ residuals <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/residuals.csv', sep='
 factors <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/X.csv', sep=''), header=F)
 #weights <- read.csv(paste('/Volumes/N1/PEER/peer_n-',n,'/W.csv', sep=''), header=F)
 
-genes<-read.table('/Volumes/N1/WP2/DATA/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
-samples<-read.table('/Volumes/N1/WP2/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
+genes<-read.table('/Volumes/N1/DATA/peer.genes.csv',header=F,sep='\t', stringsAsFactors = F)
+samples<-read.table('/Volumes/N1/DATA/peer.samples.csv',header=F,sep='\t', stringsAsFactors = F)
 
 names(residuals)<-samples$V1
 rownames(residuals)<-genes$V1
@@ -309,9 +307,9 @@ merge()
 
 #---- ------
 
-expression <- read.csv('/Volumes/N1/WP2/DATA/peer.expression.csv',header = F)
-genes <- read.csv('/Volumes/N1/WP2/DATA/peer.genes.csv',header = F)$V1
-samples <- read.csv('/Volumes/N1/WP2/DATA/peer.samples.csv',header = F)$V1
+expression <- read.csv('/Volumes/N1/DATA/peer.expression.csv',header = F)
+genes <- read.csv('/Volumes/N1/DATA/peer.genes.csv',header = F)$V1
+samples <- read.csv('/Volumes/N1/DATA/peer.samples.csv',header = F)$V1
 
 colnames(expression)<-genes
 rownames(expression)<-samples

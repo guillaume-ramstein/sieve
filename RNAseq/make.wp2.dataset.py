@@ -119,20 +119,16 @@ def MakeRDataset(file_in, file_out, observations):
     file_out.close()
 
 def main():
-    tpm_file = '/Volumes/N1/RNAseq/RNAseq.reads.tsv'
-    translation_file = '/Volumes/N1/RNAseq/RNAseq.ids.tsv'
-    #pred_file = '/Volumes/N1/WP2/Data/predictions.tsv'
-    #data_file = '/Volumes/N1/WP2/Data/wp2.dataset.tsv'
-    peer_dir = '/Volumes/N1/WP2/Data/'
-    translation = GetTranslation(translation_file)
+    workdir = '/Volumes/N1/Embeddings/DATA/'
+    translation = GetTranslation(workdir + 'RNAseq/RNAseq.ids.tsv')
     
-    print('MAking PEER dataset')
-    MakePEERDataset(tpm_file, peer_dir, translation)
-    observations = GetObservations(tpm_file, translation)
+    print('Making PEER dataset')
+    MakePEERDataset(workdir + 'RNAseq/RNAseq.reads.tsv', workdir, translation)
+    observations = GetObservations(workdir + 'RNAseq/RNAseq.reads.tsv', translation)
 
     for type in ['none', 'pred', 'emb', 'a2z']:
-        print('MAking WP2 dataset for %s'%type)
-        MakeRDataset('/Volumes/N1/WP2/Data/predictions_%s.tsv'%type, '/Volumes/N1/WP2/Data/wp2.dataset_%s.tsv'%type, observations)
+        print('Making WP2 dataset for %s'%type)
+        MakeRDataset(workdir+'predictions_%s.tsv'%type, workdir+'wp2.dataset_%s.tsv'%type, observations)
 
 if __name__ == "__main__":
     main()
